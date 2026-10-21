@@ -1,5 +1,7 @@
 # Arclight
 
+An intelligent interview scheduling and placement management platform using constraint optimization with Google OR-Tools CP-SAT.
+
 Arclight is a React/Vite placement scheduling UI with a FastAPI, PostgreSQL, and OR-Tools API. The current implementation milestone adds shared authentication and backend role enforcement; candidate and recruiter workflows are still being built. The existing coordinator UI remains marked as a demo workspace.
 
 ## Local setup

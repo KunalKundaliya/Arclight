@@ -1,7 +1,11 @@
-@"
+__pycache__/
+*.py[cod]
+.pytest_cache/
 node_modules/
 dist/
 .env
 .env.*
 !.env.example
-"@ | Set-Content .gitignore
+.venv/
+venv/
+*.tsbuildinfo
