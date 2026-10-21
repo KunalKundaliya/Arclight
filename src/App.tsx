@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Activity,
   ArrowDownRight,
@@ -26,6 +26,7 @@ import {
   MoreHorizontal,
   Plus,
   Search,
+  ShieldCheck,
   Settings,
   SlidersHorizontal,
   Sparkles,
@@ -35,6 +36,9 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { AuthFlow } from "./auth/AuthFlow";
+import { ExploreWorkspace } from "./auth/ExploreWorkspace";
+import { AuthUser, createInvitation, getSession, logout, Role } from "./auth/api";
 
 type Page =
   | "Overview"
@@ -103,14 +107,87 @@ const drives = [
 function App() {
   const [page, setPage] = useState<Page>("Overview");
   const [isPublic, setIsPublic] = useState(true);
+  const [publicView, setPublicView] = useState<"landing" | "explore" | "auth">("landing");
+  const [authRole, setAuthRole] = useState<Role | null>(null);
+  const [authReturnView, setAuthReturnView] = useState<"landing" | "explore">("explore");
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
+  const [authInitialScreen, setAuthInitialScreen] = useState<"login" | "register" | "forgot" | "reset" | "verify">("login");
+  const [invitationToken, setInvitationToken] = useState("");
+  const [verifyToken, setVerifyToken] = useState("");
+  const [resetToken, setResetToken] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [exploreTransition, setExploreTransition] = useState(false);
   const [dark, setDark] = useState(() => localStorage.getItem("arclight-theme") === "dark");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [modal, setModal] = useState<"drive" | "interview" | "signin" | null>(null);
+  const [modal, setModal] = useState<"drive" | "interview" | null>(null);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [week, setWeek] = useState(0);
   const [activeFilter, setActiveFilter] = useState("All candidates");
   const [toast, setToast] = useState("");
+
+  const completeAuth = useCallback((user: AuthUser) => {
+    setAuthUser(user);
+    setAuthError("");
+    setIsPublic(false);
+    setPage("Overview");
+    setPublicView("landing");
+    setInvitationToken("");
+    setVerifyToken("");
+    setResetToken("");
+    window.history.replaceState({}, "", window.location.pathname);
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const invitation = params.get("invite") ?? "";
+    const verify = params.get("verify") ?? "";
+    const reset = params.get("reset") ?? "";
+    if (invitation || verify || reset) {
+      setInvitationToken(invitation);
+      setVerifyToken(verify);
+      setResetToken(reset);
+      setAuthReturnView("landing");
+      setAuthInitialScreen(verify ? "verify" : reset ? "reset" : "register");
+      setPublicView("auth");
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+    if (invitation || verify || reset) return;
+    getSession()
+      .then(({ user }) => {
+        setAuthUser(user);
+        setIsPublic(false);
+      })
+      .catch((error: unknown) => {
+        if (!(error instanceof Error) || !/authentication is required|session has expired|account is unavailable/i.test(error.message)) {
+          setAuthError(error instanceof Error ? error.message : "Could not check your session.");
+        }
+      });
+  }, []);
+
+  const openAuth = (
+    role: Role | null,
+    screen: "login" | "register" = "login",
+    returnView: "landing" | "explore" = "explore",
+  ) => {
+    setAuthRole(role);
+    setAuthReturnView(returnView);
+    setAuthInitialScreen(screen);
+    setPublicView("auth");
+    setIsPublic(true);
+  };
+
+  const openExplore = () => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setPublicView("explore");
+      return;
+    }
+    setExploreTransition(true);
+    window.setTimeout(() => {
+      setPublicView("explore");
+      setExploreTransition(false);
+    }, 300);
+  };
 
   const toggleTheme = () => {
     setDark((current) => {
@@ -120,8 +197,8 @@ function App() {
     });
   };
 
-  const notify = (message: string) => {
-    setToast(message);
+  const notify = (_message: string) => {
+    setToast("Demo mode: this preview is not connected to live data; no changes were saved.");
     window.setTimeout(() => setToast(""), 2800);
   };
 
@@ -141,18 +218,42 @@ function App() {
     setNotificationOpen(false);
   };
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setAuthUser(null);
+      setAuthRole(null);
+      setIsPublic(true);
+      setPublicView("landing");
+      setAuthError("");
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : "Could not sign out.");
+    }
+  };
+
   return (
-    <div className={dark ? "app dark" : "app"}>
+    <div className={`${dark ? "app dark" : "app"} ${exploreTransition ? "explore-transition-out" : ""}`}>
       {isPublic ? (
-        <Landing
-          dark={dark}
-          onTheme={toggleTheme}
-          onOpenApp={() => {
-            setIsPublic(false);
-            setPage("Overview");
-          }}
-          onSignIn={() => setModal("signin")}
-        />
+        publicView === "landing" ? (
+          <>
+            <Landing dark={dark} onTheme={toggleTheme} onOpenApp={openExplore} onSignIn={() => openAuth(null, "login", "landing")} />
+            {authError && <div className="auth-service-error" role="alert">{authError}</div>}
+          </>
+        ) : publicView === "explore" ? (
+          <ExploreWorkspace onBack={() => setPublicView("landing")} onChoose={(role) => openAuth(role)} />
+        ) : (
+          <AuthFlow
+            role={authRole}
+            initialScreen={authInitialScreen}
+            invitationToken={invitationToken || undefined}
+            verifyToken={verifyToken || undefined}
+            resetToken={resetToken || undefined}
+            onBack={() => setPublicView(authReturnView)}
+            onSuccess={completeAuth}
+          />
+        )
+      ) : authUser && authUser.role !== "coordinator" ? (
+        <RolePortal user={authUser} dark={dark} onTheme={toggleTheme} onLogout={handleLogout} error={authError} />
       ) : (
         <div className="workspace">
           <Sidebar
@@ -161,6 +262,8 @@ function App() {
             onLanding={() => setIsPublic(true)}
             mobileOpen={mobileOpen}
             onClose={() => setMobileOpen(false)}
+            user={authUser}
+            onLogout={handleLogout}
           />
           <main className="main-area">
             <Topbar
@@ -208,7 +311,12 @@ function App() {
               {page === "Analytics" && <AnalyticsPage />}
               {page === "Notifications" && <NotificationsPage />}
               {page === "Integrations" && <IntegrationsPage onNotify={notify} />}
-              {page === "Settings" && <SettingsPage dark={dark} onTheme={toggleTheme} />}
+              {page === "Settings" && (
+                <>
+                  <SettingsPage dark={dark} onTheme={toggleTheme} />
+                  <TeamInvitePanel />
+                </>
+              )}
               {page === "My profile" && <ProfilePage />}
             </div>
             {notificationOpen && <NotificationPopover onClose={() => setNotificationOpen(false)} />}
@@ -218,6 +326,99 @@ function App() {
       {modal && <Modal type={modal} onClose={() => setModal(null)} onNotify={notify} />}
       {toast && <div className="toast"><Check size={16} />{toast}</div>}
     </div>
+  );
+}
+
+function RolePortal({
+  user,
+  dark,
+  onTheme,
+  onLogout,
+  error,
+}: {
+  user: AuthUser;
+  dark: boolean;
+  onTheme: () => void;
+  onLogout: () => void;
+  error: string;
+}) {
+  const title = user.role === "candidate" ? "Candidate workspace" : "Recruiter workspace";
+  const description = user.role === "candidate"
+    ? "Your account is verified and your access is limited to the candidate role."
+    : "Your account is verified and your access is limited to the recruiter role.";
+  return (
+    <main className="role-portal">
+      <header className="role-portal-header">
+        <Brand />
+        <div className="role-portal-actions">
+          <button className="icon-button" onClick={onTheme} aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}>
+            {dark ? <Sun size={17} /> : <Moon size={17} />}
+          </button>
+          <button className="button button-outline button-small" onClick={onLogout}>Sign out</button>
+        </div>
+      </header>
+      <section className="role-portal-content">
+        <span className="role-portal-badge">{user.role === "candidate" ? "CANDIDATE" : "HR / RECRUITER"}</span>
+        <h1>{title}</h1>
+        <p>{description}</p>
+        <div className="panel role-portal-account">
+          <span className="avatar avatar-violet">{user.name.slice(0, 2).toUpperCase()}</span>
+          <div><strong>{user.name}</strong><span>{user.email}</span></div>
+          <ShieldCheck size={18} aria-label="Authenticated account" />
+        </div>
+        <p className="role-portal-note">Role-based sign-in is active. Candidate booking and recruiter workflows are not enabled in this milestone; no demo actions are shown here.</p>
+        {error && <div className="auth-error" role="alert">{error}</div>}
+      </section>
+    </main>
+  );
+}
+
+function TeamInvitePanel() {
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<"recruiter" | "coordinator">("recruiter");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+
+  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
+    setNotice("");
+    try {
+      await createInvitation(email, role);
+      setNotice("Invitation email sent. The link expires in seven days.");
+      setEmail("");
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "The invitation could not be sent.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <section className="panel settings-section team-invite-panel">
+      <h2>Invite workspace members</h2>
+      <p>Recruiter and coordinator access is assigned by a coordinator and sent by email.</p>
+      <form onSubmit={submit}>
+        <label>
+          Work email
+          <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required maxLength={320} />
+        </label>
+        <label>
+          Workspace role
+          <select value={role} onChange={(event) => setRole(event.target.value as "recruiter" | "coordinator")}>
+            <option value="recruiter">HR / Recruiter</option>
+            <option value="coordinator">Coordinator</option>
+          </select>
+        </label>
+        {error && <div className="auth-error" role="alert">{error}</div>}
+        {notice && <div className="auth-notice" role="status">{notice}</div>}
+        <button className="button button-primary button-small" type="submit" disabled={loading}>
+          {loading ? "Sending…" : "Send invitation"}
+        </button>
+      </form>
+    </section>
   );
 }
 
@@ -236,12 +437,16 @@ function Sidebar({
   onLanding,
   mobileOpen,
   onClose,
+  user,
+  onLogout,
 }: {
   page: Page;
   onNavigate: (page: Page) => void;
   onLanding: () => void;
   mobileOpen: boolean;
   onClose: () => void;
+  user: AuthUser | null;
+  onLogout: () => void;
 }) {
   const secondary: { label: string; icon: typeof LayoutDashboard; page: Page }[] = [
     { label: "Notifications", icon: Bell, page: "Notifications" },
@@ -279,10 +484,11 @@ function Sidebar({
         <div className="sidebar-bottom">
           <button className="sidebar-help"><CircleHelp size={16} /><span>Help & support</span><ArrowUpRight size={13} /></button>
           <button className="profile-mini" onClick={() => onNavigate("My profile")}>
-            <span className="avatar avatar-maya">MC</span>
-            <span className="profile-copy"><strong>Maya Chen</strong><small>Coordinator</small></span>
+            <span className="avatar avatar-maya">{user?.name.slice(0, 2).toUpperCase() ?? "AC"}</span>
+            <span className="profile-copy"><strong>{user?.name ?? "Coordinator"}</strong><small>{user?.email ?? "Arclight workspace"}</small></span>
             <MoreHorizontal size={18} />
           </button>
+          <button className="sidebar-help" onClick={onLogout}><ArrowUpRight size={16} /><span>Sign out</span></button>
         </div>
       </aside>
     </>
@@ -479,12 +685,18 @@ function DrivesPage({ onCreate }: { onCreate: () => void }) {
 }
 
 function SchedulerPage({ onNotify }: { onNotify: (message: string) => void }) {
-  const [generated, setGenerated] = useState(false);
+  const generated = false;
+  const setGenerated = (value: boolean) => {
+    if (value) onNotify("Schedule generation requires the live scheduling API.");
+  };
   return <><PageHeading eyebrow="PLANNING / AI SCHEDULER" title="A schedule that just works." subtitle="Set your constraints. Arclight finds the best fit for everyone." action={<button className="button button-outline" onClick={() => onNotify("Your current scheduling settings have been saved.")}><Settings size={14} /> Scheduler settings</button>} /><div className="scheduler-layout"><section className="panel scheduler-config"><div className="section-kicker"><span className="sparkle-chip"><Sparkles size={15} /></span><div><h2>Build a new schedule</h2><p>Northstar Labs · Engineering · Nov 2–6, 2026</p></div></div><div className="form-section"><label>Interview rounds</label><div className="round-steps"><div><span>01</span><strong>Coding</strong><small>45 min · 1 interviewer</small><Check size={14} /></div><ArrowRight size={15} /><div><span>02</span><strong>Technical</strong><small>60 min · 2 interviewers</small><Check size={14} /></div><ArrowRight size={15} /><div><span>03</span><strong>HR</strong><small>30 min · 1 interviewer</small><Check size={14} /></div></div></div><div className="scheduler-fields"><label><span>Interview window</span><select defaultValue="Nov 2–6, 2026"><option>Nov 2–6, 2026</option><option>Nov 9–13, 2026</option></select></label><label><span>Daily hours</span><select defaultValue="09:00 AM – 05:00 PM"><option>09:00 AM – 05:00 PM</option><option>08:00 AM – 04:00 PM</option></select></label><label><span>Room capacity</span><select defaultValue="4 rooms · max 4 candidates"><option>4 rooms · max 4 candidates</option><option>2 rooms · max 2 candidates</option></select></label><label><span>Break between interviews</span><select defaultValue="15 minutes"><option>15 minutes</option><option>30 minutes</option></select></label></div><div className="constraints-box"><div><strong>Scheduling preferences</strong><button className="text-link" onClick={() => onNotify("Preference editor is ready.")}>Edit preferences</button></div><div className="preference-chips"><span><Check size={12} /> Prefer morning slots</span><span><Check size={12} /> Avoid back-to-back interviews</span><span><Check size={12} /> Match interviewer skills</span><span><Check size={12} /> Honor candidate availability</span></div></div><button className="button button-primary button-generate" onClick={() => setGenerated(true)}><Sparkles size={16} /> Generate smart schedule <ArrowRight size={15} /></button></section><aside className="scheduler-side"><div className="ai-note"><div className="ai-note-icon"><Sparkles size={16} /></div><strong>Better schedules, fewer compromises.</strong><p>Arclight balances interviewer skills, candidate preferences, availability, and room capacity to build an efficient schedule.</p><a href="#scheduler-details">How scheduling works <ArrowRight size={13} /></a></div><div className="panel readiness-card"><h3>Schedule readiness</h3><div className="readiness-score">92<span>/ 100</span><i>Ready to schedule</i></div><div className="readiness-row"><span>Candidate availability</span><strong>95%</strong><div><i style={{ width: "95%" }} /></div></div><div className="readiness-row"><span>Interviewer coverage</span><strong>89%</strong><div><i style={{ width: "89%" }} /></div></div><div className="readiness-row"><span>Room availability</span><strong>100%</strong><div><i style={{ width: "100%" }} /></div></div></div></aside></div>{generated && <div className="generated-banner"><CheckCheck size={17} /><div><strong>Your schedule is ready for review.</strong><span>228 interviews placed across 4 rooms. 0 hard conflicts found.</span></div><button className="button button-outline button-small" onClick={() => onNotify("Schedule published to all participants.")}>Review & publish <ArrowRight size={13} /></button><button className="icon-button compact" aria-label="Dismiss" onClick={() => setGenerated(false)}><X size={15} /></button></div>}</>;
 }
 
 function ConflictsPage({ onNotify }: { onNotify: (message: string) => void }) {
-  const [resolved, setResolved] = useState<string[]>([]);
+  const resolved: string[] = [];
+  const setResolved = (_next: string[]) => {
+    onNotify("Conflict updates require the live scheduling API.");
+  };
   const conflicts = [{ title: "Interviewer availability overlap", detail: "Priya Nair is assigned to two interviews at 10:00 AM on Nov 3.", candidate: "Priya Nair · Coding round", severity: "Scheduling conflict", icon: "PN", color: "blue" }, { title: "Room capacity exceeded", detail: "Room C-201 has 5 panelists booked; max capacity is 4.", candidate: "Northstar Labs · Panel review", severity: "Room conflict", icon: "NS", color: "violet" }, { title: "Interviewer cancellation request", detail: "Alex Rivera is unavailable on Nov 4. 3 interviews may need moving.", candidate: "Alex Rivera · 3 affected candidates", severity: "Availability change", icon: "AR", color: "orange" }];
   return <><PageHeading eyebrow="PLANNING / CONFLICTS" title="A few things need a closer look." subtitle="Resolve scheduling issues before they reach candidates." action={<button className="button button-outline" onClick={() => onNotify("All conflicts are up to date.")}><Activity size={14} /> Refresh conflicts</button>} /><div className="conflict-summary"><span className="conflict-count">3</span><div><strong>Open conflicts</strong><span>2 high priority · 1 schedule change</span></div><span className="conflict-updated">Last checked just now</span></div><div className="conflict-list">{conflicts.filter((item) => !resolved.includes(item.title)).map((conflict) => <section className="panel conflict-card" key={conflict.title}><span className={`avatar avatar-${conflict.color}`}>{conflict.icon}</span><div className="conflict-copy"><div className="conflict-title-row"><h2>{conflict.title}</h2><StatusBadge status={conflict.severity} /></div><p>{conflict.detail}</p><span className="conflict-candidate">{conflict.candidate}</span></div><div className="conflict-actions"><button className="button button-outline button-small" onClick={() => onNotify(`Details opened: ${conflict.title}`)}>View details</button><button className="button button-primary button-small" onClick={() => { setResolved([...resolved, conflict.title]); onNotify("Conflict resolved. Unaffected interviews were preserved."); }}>{conflict.title.includes("cancellation") ? "Reschedule affected" : "Resolve conflict"} <ArrowRight size={13} /></button></div></section>)}</div>{resolved.length === conflicts.length && <EmptyState title="You're all caught up" detail="Every placement scheduling conflict has been resolved." />}</>;
 }
@@ -548,10 +760,9 @@ function NotificationPopover({ onClose }: { onClose: () => void }) {
 function Modal({ type, onClose, onNotify }: { type: "drive" | "interview" | "signin"; onClose: () => void; onNotify: (message: string) => void }) {
   const isDrive = type === "drive";
   const isSignIn = type === "signin";
-  const [submitted, setSubmitted] = useState(false);
+  const submitted = false;
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setSubmitted(true);
     onNotify(isSignIn ? "Welcome back to Arclight." : isDrive ? "Your placement drive has been created." : "Candidate added to the placement drive.");
     window.setTimeout(onClose, 700);
   };
