@@ -34,65 +34,69 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-[#FAFAFD]">
-      <div className="w-full max-w-md">
-        {/* Card Header matching ArcLight brand */}
-        <div className="text-center mb-6">
-          <Link to="/" className="inline-flex items-center gap-2 mb-3 group">
-            <div className="w-9 h-9 rounded-lg bg-[#4f46e5] flex items-center justify-center text-white font-bold text-lg shadow-sm">
-              A
+    <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center p-6 sm:p-8 lg:p-12 bg-[#FAFAFD]">
+      <div className="w-full max-w-md space-y-6">
+        {/* Card Header matching Arclight brand */}
+        <div className="text-center space-y-2">
+          <Link to="/" className="inline-flex items-center gap-2.5 group">
+            <div className="w-8 h-8 flex items-center justify-center text-[#6366f1]">
+              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round">
+                <line x1="6" y1="19" x2="10" y2="5" />
+                <line x1="12" y1="19" x2="16" y2="5" />
+                <line x1="18" y1="19" x2="22" y2="5" />
+              </svg>
             </div>
-            <span className="text-2xl font-bold tracking-tight text-slate-900">ArcLight</span>
+            <span className="text-2xl font-bold tracking-tight text-slate-900">Arclight</span>
           </Link>
           <h2 className="text-xl font-bold text-slate-900 tracking-tight">Webster 2026 Placement Workspace</h2>
-          <p className="text-xs text-slate-500 mt-1">Sign in to coordinate candidate placement schedules</p>
+          <p className="text-sm text-slate-500">Sign in to coordinate candidate placement schedules</p>
         </div>
 
         {/* Demo Role Quick Launch Box */}
-        <div className="mb-6 p-4 rounded-xl bg-white border border-indigo-100 shadow-subtle">
+        <div className="p-5 rounded-2xl bg-white border border-indigo-100/80 shadow-xs">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#4f46e5] flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-[#4f46e5]" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#6366f1] flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-[#6366f1]" />
               Quick Demo Entry
             </span>
             <span className="text-[10px] text-slate-400 font-mono">1-Click Launch</span>
           </div>
-          <p className="text-xs text-slate-500 mb-3">
+          <p className="text-xs text-slate-500 mb-3.5">
             Select a persona below to enter without credentials:
           </p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-2.5">
             <button
               type="button"
               onClick={() => handleQuickDemoEntry(ROLES.COORDINATOR)}
-              className="p-2.5 rounded-lg bg-[#eef2ff] hover:bg-[#e0e7ff] border border-[#c7d2fe] text-center transition-all group"
+              className="p-3 rounded-xl bg-[#eef2ff] hover:bg-[#e0e7ff] border border-[#c7d2fe] text-center transition-all group"
             >
-              <Briefcase className="w-4 h-4 mx-auto text-[#4f46e5] mb-1 group-hover:scale-110 transition-transform" />
+              <Briefcase className="w-4 h-4 mx-auto text-[#6366f1] mb-1.5 group-hover:scale-110 transition-transform" />
               <div className="text-xs font-bold text-[#312e81]">Coordinator</div>
-              <div className="text-[10px] text-[#4338ca]">Maya Chen</div>
+              <div className="text-[11px] text-[#4338ca]">Maya Chen</div>
             </button>
             <button
               type="button"
               onClick={() => handleQuickDemoEntry(ROLES.INTERVIEWER)}
-              className="p-2.5 rounded-lg bg-violet-50 hover:bg-violet-100 border border-violet-200 text-center transition-all group"
+              className="p-3 rounded-xl bg-violet-50 hover:bg-violet-100 border border-violet-200 text-center transition-all group"
             >
-              <UserCheck className="w-4 h-4 mx-auto text-violet-600 mb-1 group-hover:scale-110 transition-transform" />
+              <UserCheck className="w-4 h-4 mx-auto text-violet-600 mb-1.5 group-hover:scale-110 transition-transform" />
               <div className="text-xs font-bold text-violet-950">Panel Lead</div>
-              <div className="text-[10px] text-violet-700">Priya Nair</div>
+              <div className="text-[11px] text-violet-700">Priya Nair</div>
             </button>
             <button
               type="button"
               onClick={() => handleQuickDemoEntry(ROLES.CANDIDATE)}
-              className="p-2.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-center transition-all group"
+              className="p-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-center transition-all group"
             >
-              <Users className="w-4 h-4 mx-auto text-emerald-600 mb-1 group-hover:scale-110 transition-transform" />
+              <Users className="w-4 h-4 mx-auto text-emerald-600 mb-1.5 group-hover:scale-110 transition-transform" />
               <div className="text-xs font-bold text-emerald-950">Candidate</div>
-              <div className="text-[10px] text-emerald-700">Aanya Shah</div>
+              <div className="text-[11px] text-emerald-700">Aanya Shah</div>
             </button>
           </div>
         </div>
 
         {/* Standard Form */}
-        <div className="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-subtle">
+        <div className="p-7 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
           <form onSubmit={handleStandardLogin} className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">Select Persona</label>
@@ -162,7 +166,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="w-full py-2.5 px-4 text-xs font-semibold text-white bg-[#4f46e5] hover:bg-[#4338ca] rounded-lg shadow-sm transition-all flex items-center justify-center gap-2"
+              className="w-full py-3 px-4 text-sm font-semibold text-white bg-[#6366f1] hover:bg-[#4f46e5] rounded-xl shadow-md shadow-indigo-600/20 transition-all flex items-center justify-center gap-2 hover:translate-y-[-0.5px]"
             >
               <span>Sign In</span>
               <ArrowRight className="w-4 h-4" />

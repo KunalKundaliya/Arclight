@@ -156,12 +156,12 @@ export default function CoordinatorDashboard() {
   ];
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* 1. Header section matching Screenshot 2 */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-8 max-w-7xl mx-auto">
+      {/* 1. Header section with spacious typography */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200/70">
         <div>
           {/* Breadcrumb */}
-          <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400 mb-1">
+          <div className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
             WEBSTER 2026 / OVERVIEW
           </div>
           {/* Main Title */}
@@ -169,89 +169,88 @@ export default function CoordinatorDashboard() {
             A clearer view of placement week.
           </h1>
           {/* Subtitle */}
-          <p className="text-xs sm:text-sm text-slate-500 font-normal mt-0.5">
+          <p className="text-sm text-slate-500 font-normal mt-1 leading-relaxed">
             Good morning, Maya. Here's what needs your attention for Webster 2026. Wednesday, Nov 4, 2026.
           </p>
         </div>
 
         {/* Action Buttons at top right */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-3">
           <button
             onClick={handleExportReport}
-            className="inline-flex items-center justify-center px-4 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/90 rounded-lg shadow-2xs transition-colors"
+            className="inline-flex items-center justify-center px-4 py-2.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/90 rounded-xl shadow-2xs transition-colors"
           >
             Export report
           </button>
           <button
             onClick={() => setIsDriveModalOpen(true)}
-            className="inline-flex items-center justify-center px-4 py-2 text-xs font-semibold text-white bg-[#4f46e5] hover:bg-[#4338ca] rounded-lg shadow-sm transition-all"
+            className="inline-flex items-center justify-center px-4 py-2.5 text-xs font-semibold text-white bg-[#6366f1] hover:bg-[#4f46e5] rounded-xl shadow-sm shadow-indigo-600/20 transition-all hover:translate-y-[-0.5px]"
           >
             Create drive +
           </button>
         </div>
       </div>
 
-      {/* 2. 4 Stat Cards Row matching Screenshot 2 & Prompt requirements */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 2. 4 Stat Cards Row with spacious cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Card 1 */}
-        <div className="bg-white rounded-xl border border-slate-200/90 p-5 shadow-subtle flex flex-col justify-between">
-          <span className="text-xs font-medium text-slate-500">Active placement drives</span>
-          <div className="mt-3">
-            <span className="text-3xl font-bold tracking-tight text-slate-900 font-sans">4</span>
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs flex flex-col justify-between hover:shadow-card transition-all">
+          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Active placement drives</span>
+          <div className="mt-4">
+            <span className="text-3xl font-extrabold tracking-tight text-slate-900">4</span>
           </div>
-          <div className="mt-2 text-xs font-medium text-emerald-600">
+          <div className="mt-3 text-xs font-medium text-emerald-600">
             2 opening this week
           </div>
         </div>
 
         {/* Card 2 */}
-        <div className="bg-white rounded-xl border border-slate-200/90 p-5 shadow-subtle flex flex-col justify-between">
-          <span className="text-xs font-medium text-slate-500">Candidates in Northstar</span>
-          <div className="mt-3">
-            <span className="text-3xl font-bold tracking-tight text-slate-900 font-sans">240</span>
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs flex flex-col justify-between hover:shadow-card transition-all">
+          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Candidates in Northstar</span>
+          <div className="mt-4">
+            <span className="text-3xl font-extrabold tracking-tight text-slate-900">240</span>
           </div>
-          <div className="mt-2 text-xs font-medium text-emerald-600">
+          <div className="mt-3 text-xs font-medium text-emerald-600">
             228 scheduled · 95% coverage
           </div>
         </div>
 
         {/* Card 3 */}
-        <div className="bg-white rounded-xl border border-slate-200/90 p-5 shadow-subtle flex flex-col justify-between">
-          <span className="text-xs font-medium text-slate-500">Interviews this week</span>
-          <div className="mt-3">
-            <span className="text-3xl font-bold tracking-tight text-slate-900 font-sans">228</span>
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs flex flex-col justify-between hover:shadow-card transition-all">
+          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Interviews this week</span>
+          <div className="mt-4">
+            <span className="text-3xl font-extrabold tracking-tight text-slate-900">228</span>
           </div>
-          <div className="mt-2 text-xs font-medium text-emerald-600">
+          <div className="mt-3 text-xs font-medium text-emerald-600">
             Across 8 panels · 6 rooms
           </div>
         </div>
 
         {/* Card 4 */}
-        <div className="bg-white rounded-xl border border-slate-200/90 p-5 shadow-subtle flex flex-col justify-between">
-          <span className="text-xs font-medium text-slate-500">Needs your attention</span>
-          <div className="mt-3">
-            <span className="text-3xl font-bold tracking-tight text-slate-900 font-sans">3</span>
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs flex flex-col justify-between hover:shadow-card transition-all">
+          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Needs your attention</span>
+          <div className="mt-4">
+            <span className="text-3xl font-extrabold tracking-tight text-slate-900">3</span>
           </div>
-          <div className="mt-2 text-xs font-medium text-amber-600">
+          <div className="mt-3 text-xs font-medium text-amber-600">
             2 conflicts · 1 dropout request
           </div>
         </div>
       </div>
 
-      {/* 3. Amber Notification Banner matching Screenshot 2 */}
-      <div className="p-4 rounded-xl bg-[#fffbeb] border border-[#fef08a] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+      {/* 3. Amber Notification Banner */}
+      <div className="p-5 rounded-2xl bg-[#fffbeb] border border-[#fef08a] flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs shadow-2xs">
         <div>
           <h4 className="font-bold text-[#78350f] text-sm">
             Three scheduling issues, one place to resolve them.
           </h4>
-          <p className="text-[#92400e] mt-0.5">
+          <p className="text-[#92400e] mt-1 leading-relaxed">
             Two availability conflicts and Alex Rivera's dropout request need a coordinator review.
           </p>
         </div>
-        {/* Distinct route to /coordinator/scheduler */}
         <Link
           to="/coordinator/scheduler"
-          className="text-xs font-semibold text-[#78350f] hover:text-[#451a03] flex items-center gap-1 shrink-0"
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-[#78350f] bg-white/80 hover:bg-white border border-[#fde68a] rounded-xl transition-colors shadow-2xs shrink-0"
         >
           <span>Review issues</span>
           <ArrowRight className="w-3.5 h-3.5" />

@@ -25,15 +25,15 @@ export default function DataTable({
   }
 
   return (
-    <div className={`bg-white rounded-xl border border-slate-200/90 shadow-subtle overflow-hidden ${className}`}>
+    <div className={`bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden ${className}`}>
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm text-slate-600">
-          <thead className="bg-slate-50/80 border-b border-slate-200/90 text-xs font-semibold uppercase tracking-wider text-slate-500">
+        <table className="w-full text-left text-sm text-slate-700">
+          <thead className="bg-slate-50/70 border-b border-slate-200/80 text-xs font-semibold uppercase tracking-wider text-slate-400">
             <tr>
               {columns.map((col, index) => (
                 <th
                   key={col.key || index}
-                  className={`px-4 py-3.5 ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'} ${col.className || ''}`}
+                  className={`px-5 py-3.5 ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'} ${col.className || ''}`}
                 >
                   {col.header}
                 </th>
@@ -52,7 +52,7 @@ export default function DataTable({
                 {columns.map((col, colIndex) => (
                   <td
                     key={col.key || colIndex}
-                    className={`px-4 py-3.5 align-middle ${
+                    className={`px-5 py-4 align-middle ${
                       col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'
                     } ${col.cellClassName || ''}`}
                   >
@@ -64,9 +64,9 @@ export default function DataTable({
           </tbody>
         </table>
       </div>
-      <div className="px-4 py-3 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+      <div className="px-5 py-3.5 bg-slate-50/40 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400 font-medium">
         <span>Showing {data.length} entries</span>
-        <span className="font-mono text-[11px] text-slate-400">Ancient One's Crucible State</span>
+        <span className="font-mono text-[11px] text-slate-400">Arclight Workspace</span>
       </div>
     </div>
   );

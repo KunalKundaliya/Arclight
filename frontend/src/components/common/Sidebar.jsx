@@ -72,18 +72,22 @@ export default function Sidebar({ isOpen, onClose }) {
 
       {/* Sidebar container */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-60 bg-[#0f172a] text-slate-300 flex flex-col justify-between transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-[#0f172a] text-slate-300 flex flex-col justify-between transition-transform duration-300 ease-in-out lg:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div>
-          {/* ArcLight Brand Logo at top */}
-          <div className="h-16 px-6 flex items-center justify-between border-b border-slate-800/60">
-            <Link to="/" className="flex items-center gap-2 text-xl font-bold tracking-tight text-white hover:text-indigo-300 transition-colors">
-              <span className="w-7 h-7 rounded-lg bg-[#4f46e5] flex items-center justify-center text-white font-bold text-sm">
-                A
-              </span>
-              <span>ArcLight</span>
+          {/* Arclight Brand Logo at top matching new visual identity */}
+          <div className="h-18 px-6 flex items-center justify-between border-b border-slate-800/70">
+            <Link to="/" className="flex items-center gap-2.5 text-xl font-bold tracking-tight text-white hover:text-indigo-200 transition-colors">
+              <div className="w-6 h-6 flex items-center justify-center text-[#6366f1]">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round">
+                  <line x1="6" y1="19" x2="10" y2="5" />
+                  <line x1="12" y1="19" x2="16" y2="5" />
+                  <line x1="18" y1="19" x2="22" y2="5" />
+                </svg>
+              </div>
+              <span className="font-bold tracking-tight">Arclight</span>
             </Link>
 
             <button
@@ -115,19 +119,19 @@ export default function Sidebar({ isOpen, onClose }) {
                 <div className="text-[10px] uppercase font-bold text-slate-400 px-2 py-1">Switch Workspace</div>
                 <button
                   onClick={() => { switchRole(ROLES.COORDINATOR); setWorkspaceMenuOpen(false); }}
-                  className={`w-full text-left px-2 py-1.5 rounded ${currentRole === ROLES.COORDINATOR ? 'bg-indigo-600 text-white font-semibold' : 'hover:bg-slate-700 text-slate-300'}`}
+                  className={`w-full text-left px-2.5 py-2 rounded-lg ${currentRole === ROLES.COORDINATOR ? 'bg-indigo-600 text-white font-semibold' : 'hover:bg-slate-700 text-slate-300'}`}
                 >
                   Coordinator (Maya Chen)
                 </button>
                 <button
                   onClick={() => { switchRole(ROLES.INTERVIEWER); setWorkspaceMenuOpen(false); }}
-                  className={`w-full text-left px-2 py-1.5 rounded ${currentRole === ROLES.INTERVIEWER ? 'bg-indigo-600 text-white font-semibold' : 'hover:bg-slate-700 text-slate-300'}`}
+                  className={`w-full text-left px-2.5 py-2 rounded-lg ${currentRole === ROLES.INTERVIEWER ? 'bg-indigo-600 text-white font-semibold' : 'hover:bg-slate-700 text-slate-300'}`}
                 >
                   Interviewer (Priya Nair)
                 </button>
                 <button
                   onClick={() => { switchRole(ROLES.CANDIDATE); setWorkspaceMenuOpen(false); }}
-                  className={`w-full text-left px-2 py-1.5 rounded ${currentRole === ROLES.CANDIDATE ? 'bg-indigo-600 text-white font-semibold' : 'hover:bg-slate-700 text-slate-300'}`}
+                  className={`w-full text-left px-2.5 py-2 rounded-lg ${currentRole === ROLES.CANDIDATE ? 'bg-indigo-600 text-white font-semibold' : 'hover:bg-slate-700 text-slate-300'}`}
                 >
                   Candidate (Aanya Shah)
                 </button>
@@ -136,7 +140,7 @@ export default function Sidebar({ isOpen, onClose }) {
           </div>
 
           {/* Navigation Links List */}
-          <div className="px-4 py-2 space-y-0.5 overflow-y-auto max-h-[calc(100vh-210px)]">
+          <div className="px-4 py-2 space-y-1 overflow-y-auto max-h-[calc(100vh-210px)]">
             {links.map((link) => (
               <NavLink
                 key={link.to}
@@ -144,10 +148,10 @@ export default function Sidebar({ isOpen, onClose }) {
                 end={link.end}
                 onClick={() => onClose && onClose()}
                 className={({ isActive }) =>
-                  `flex items-center justify-between px-3.5 py-2 rounded-lg text-xs font-medium transition-all ${
+                  `flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all ${
                     isActive
                       ? 'bg-[#312e81] text-white font-semibold shadow-xs'
-                      : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50'
+                      : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'
                   }`
                 }
               >
@@ -164,13 +168,18 @@ export default function Sidebar({ isOpen, onClose }) {
           </div>
         </div>
 
-        {/* User Profile at Bottom matching Screenshot 2 */}
-        <div className="p-6 border-t border-slate-800/60">
-          <div className="text-xs font-bold text-white leading-tight">
-            {user?.name || 'Maya Chen'}
+        {/* User Profile at Bottom */}
+        <div className="p-6 border-t border-slate-800/70 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-white shrink-0">
+            {user?.avatar || 'MC'}
           </div>
-          <div className="text-[11px] text-slate-400 font-normal leading-tight mt-0.5">
-            {currentRole === ROLES.COORDINATOR ? 'Coordinator · ArcLight' : currentRole === ROLES.INTERVIEWER ? 'Panel Lead · Northstar' : 'Applicant · Webster 2026'}
+          <div className="min-w-0">
+            <div className="text-xs font-bold text-white leading-tight truncate">
+              {user?.name || 'Maya Chen'}
+            </div>
+            <div className="text-[11px] text-slate-400 font-normal leading-tight mt-0.5 truncate">
+              {currentRole === ROLES.COORDINATOR ? 'Coordinator · Arclight' : currentRole === ROLES.INTERVIEWER ? 'Panel Lead · Northstar' : 'Applicant · Webster 2026'}
+            </div>
           </div>
         </div>
       </aside>

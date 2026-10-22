@@ -35,7 +35,7 @@ export default function StatusBadge({ status, type = 'status', className = '' })
   if (type === 'round') {
     const style = roundConfig[status] || 'bg-slate-50 text-slate-700 border-slate-200';
     return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${style} ${className}`}>
+      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${style} ${className}`}>
         {status}
       </span>
     );
@@ -44,7 +44,7 @@ export default function StatusBadge({ status, type = 'status', className = '' })
   const conf = statusConfig[status] || { bg: 'bg-slate-100 text-slate-700 border-slate-200', dot: 'bg-slate-400' };
 
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${conf.bg} ${className}`}>
+    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${conf.bg} ${className}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${conf.dot}`} />
       {status}
     </span>
