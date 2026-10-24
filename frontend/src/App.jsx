@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
+import ProtectedRoute from './components/common/ProtectedRoute';
 
 // Layouts
 import PublicLayout from './layouts/PublicLayout';
@@ -59,7 +60,14 @@ export default function App() {
             </Route>
 
             {/* Coordinator Workspace Routes */}
-            <Route path="/coordinator" element={<CoordinatorLayout />}>
+            <Route
+              path="/coordinator"
+              element={
+                <ProtectedRoute allowedRoles={['coordinator']}>
+                  <CoordinatorLayout />
+                </ProtectedRoute>
+              }
+            >
               <Route index element={<CoordinatorDashboard />} />
               <Route path="drives" element={<RecruitmentDrivesPage />} />
               <Route path="candidates" element={<CandidatesPage />} />
@@ -75,7 +83,14 @@ export default function App() {
             </Route>
 
             {/* Interviewer Portal Routes */}
-            <Route path="/interviewer" element={<InterviewerLayout />}>
+            <Route
+              path="/interviewer"
+              element={
+                <ProtectedRoute allowedRoles={['interviewer']}>
+                  <InterviewerLayout />
+                </ProtectedRoute>
+              }
+            >
               <Route index element={<InterviewerDashboard />} />
               <Route path="calendar" element={<InterviewerCalendarPage />} />
               <Route path="availability" element={<InterviewerAvailabilityPage />} />
@@ -86,7 +101,14 @@ export default function App() {
             </Route>
 
             {/* Candidate Portal Routes */}
-            <Route path="/candidate" element={<CandidateLayout />}>
+            <Route
+              path="/candidate"
+              element={
+                <ProtectedRoute allowedRoles={['candidate']}>
+                  <CandidateLayout />
+                </ProtectedRoute>
+              }
+            >
               <Route index element={<CandidateDashboard />} />
               <Route path="interviews" element={<CandidateInterviewsPage />} />
               <Route path="book/:roundId" element={<CandidateBookingPage />} />

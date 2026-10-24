@@ -7,9 +7,15 @@ const API_BASE = '/api';
 
 async function request(endpoint, options = {}) {
   const url = `${API_BASE}${endpoint}`;
+  
+  // Inject Bearer Token from localStorage if logged in
+  const token = localStorage.getItem('arclight_token');
+  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+
   const config = {
     headers: {
       'Content-Type': 'application/json',
+      ...authHeaders,
       ...options.headers,
     },
     ...options,
@@ -33,6 +39,17 @@ export const apiClient = {
   checkHealth() {
     return request('/health');
   },
+    // Auth API
+  login(credentials) {
+    return request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
+  },
+  getMe() {
+    return request('/auth/me');
+  },
+
 
   // Drives
   getDrives() {

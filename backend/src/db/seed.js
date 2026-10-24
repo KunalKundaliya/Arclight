@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import bcrypt from 'bcryptjs';
 import { pool } from '../config/db.js';
 import { initialDrives } from '../data/mockDrives.js';
 import { initialCandidates } from '../data/mockCandidates.js';
@@ -17,8 +18,24 @@ async function seed() {
 
     console.log('🔨 Dropping old tables and recreating schema...');
     await client.query(`
-      DROP TABLE IF EXISTS evaluations, interviews, candidates, rooms, interviewers, drives, notifications CASCADE;
+      DROP TABLE IF EXISTS users, evaluations, interviews, candidates, rooms, interviewers, drives, notifications CASCADE;
 
+      -- 1. Users Table (Authentication & Role Authorization)
+      CREATE TABLE users (
+        id VARCHAR(64) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        role VARCHAR(50) NOT NULL,
+        role_title VARCHAR(255),
+        avatar VARCHAR(10),
+        avatar_bg VARCHAR(50) DEFAULT 'bg-indigo-600',
+        department VARCHAR(255),
+        organization VARCHAR(255),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+
+      -- 2. Drives Table
       CREATE TABLE drives (
         id VARCHAR(64) PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
@@ -36,6 +53,7 @@ async function seed() {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
 
+      -- 3. Interviewers Table
       CREATE TABLE interviewers (
         id VARCHAR(64) PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
@@ -53,6 +71,7 @@ async function seed() {
         weekly_availability JSONB DEFAULT '{}'::jsonb
       );
 
+      -- 4. Rooms Table
       CREATE TABLE rooms (
         id VARCHAR(64) PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
@@ -65,6 +84,7 @@ async function seed() {
         current_status_note TEXT
       );
 
+      -- 5. Candidates Table
       CREATE TABLE candidates (
         id VARCHAR(64) PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
@@ -86,6 +106,7 @@ async function seed() {
         notes TEXT
       );
 
+      -- 6. Interviews Table
       CREATE TABLE interviews (
         id VARCHAR(64) PRIMARY KEY,
         candidate_id VARCHAR(64),
@@ -113,6 +134,7 @@ async function seed() {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
 
+      -- 7. Evaluations Table
       CREATE TABLE evaluations (
         id VARCHAR(64) PRIMARY KEY,
         interview_id VARCHAR(64),
@@ -132,6 +154,7 @@ async function seed() {
         submitted_date DATE DEFAULT CURRENT_DATE
       );
 
+      -- 8. Notifications Table
       CREATE TABLE notifications (
         id VARCHAR(64) PRIMARY KEY,
         title VARCHAR(255) NOT NULL,
@@ -217,6 +240,54 @@ async function seed() {
          VALUES ($1, $2, $3, $4, $5, $6)
          ON CONFLICT (id) DO NOTHING`,
         [n.id, n.title, n.description, n.time, n.type, n.read || false]
+      );
+    }
+
+    // 8. Seed Default Users with Hashed Passwords
+    console.log('👤 Seeding user accounts...');
+    const defaultPasswordHash = bcrypt.hashSync('password123', 10);
+    const defaultUsers = [
+      {
+        id: 'user-coord',
+        name: 'Maya Chen',
+        email: 'maya.chen@arclight.io',
+        role: 'coordinator',
+        roleTitle: 'Placement Coordinator',
+        avatar: 'MC',
+        avatarBg: 'bg-indigo-600',
+        department: 'Campus Placement Cell',
+        organization: 'ArcLight'
+      },
+      {
+        id: 'user-int-01',
+        name: 'Priya Nair',
+        email: 'priya.nair@northstar.io',
+        role: 'interviewer',
+        roleTitle: 'Senior Engineering Panel Lead',
+        avatar: 'PN',
+        avatarBg: 'bg-violet-600',
+        department: 'Northstar Labs Engineering',
+        organization: 'Northstar Labs'
+      },
+      {
+        id: 'user-cand-01',
+        name: 'Aanya Shah',
+        email: 'aanya.shah@webster.edu',
+        role: 'candidate',
+        roleTitle: 'Candidate — Software Engineering',
+        avatar: 'AS',
+        avatarBg: 'bg-emerald-600',
+        department: 'Computer Science & Engineering',
+        organization: 'Webster University'
+      }
+    ];
+
+    for (const u of defaultUsers) {
+      await client.query(
+        `INSERT INTO users (id, name, email, password_hash, role, role_title, avatar, avatar_bg, department, organization)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         ON CONFLICT (id) DO UPDATE SET password_hash = EXCLUDED.password_hash`,
+        [u.id, u.name, u.email, defaultPasswordHash, u.role, u.roleTitle, u.avatar, u.avatarBg, u.department, u.organization]
       );
     }
 

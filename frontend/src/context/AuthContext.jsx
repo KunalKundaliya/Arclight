@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { apiClient } from '../services/apiClient';
 
 const AuthContext = createContext(null);
 
@@ -9,72 +10,58 @@ export const ROLES = {
   GUEST: 'guest',
 };
 
-const DEMO_USERS = {
-  [ROLES.COORDINATOR]: {
-    id: 'user-coord',
-    name: 'Maya Chen',
-    role: ROLES.COORDINATOR,
-    roleTitle: 'Placement Coordinator',
-    email: 'maya.chen@arclight.io',
-    avatar: 'MC',
-    avatarBg: 'bg-indigo-600',
-    department: 'Webster 2026 Campus Placement Cell',
-    organization: 'ArcLight'
-  },
-  [ROLES.INTERVIEWER]: {
-    id: 'int-01',
-    name: 'Priya Nair',
-    role: ROLES.INTERVIEWER,
-    roleTitle: 'Senior Engineering Panel Lead',
-    email: 'priya.nair@northstar.io',
-    avatar: 'PN',
-    avatarBg: 'bg-violet-600',
-    department: 'Northstar Labs Engineering',
-    organization: 'Northstar Labs'
-  },
-  [ROLES.CANDIDATE]: {
-    id: 'cand-01',
-    name: 'Aanya Shah',
-    role: ROLES.CANDIDATE,
-    roleTitle: 'Candidate — Software Engineering',
-    email: 'aanya.shah@webster.edu',
-    avatar: 'AS',
-    avatarBg: 'bg-emerald-600',
-    department: 'Computer Science & Engineering',
-    organization: 'Webster University'
-  }
-};
-
 export function AuthProvider({ children }) {
-  const [currentRole, setCurrentRole] = useState(() => {
-    return localStorage.getItem('aot_current_role') || ROLES.COORDINATOR;
-  });
+  const [user, setUser] = useState(null);
+  const [currentRole, setCurrentRole] = useState(ROLES.GUEST);
+  const [loading, setLoading] = useState(true);
 
-  const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('aot_current_role') || ROLES.COORDINATOR;
-    return DEMO_USERS[saved] || DEMO_USERS[ROLES.COORDINATOR];
-  });
+  // Check token on initial load
+  useEffect(() => {
+    async function loadUser() {
+      const token = localStorage.getItem('arclight_token');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
 
-  const switchRole = (newRole) => {
-    if (DEMO_USERS[newRole]) {
-      setCurrentRole(newRole);
-      setUser(DEMO_USERS[newRole]);
-      localStorage.setItem('aot_current_role', newRole);
+      try {
+        const res = await apiClient.getMe();
+        if (res.success && res.user) {
+          setUser(res.user);
+          setCurrentRole(res.user.role);
+        } else {
+          logout();
+        }
+      } catch (err) {
+        console.warn('Invalid token session, logging out:', err.message);
+        logout();
+      } finally {
+        setLoading(false);
+      }
     }
-  };
 
-  const loginAs = (role) => {
-    switchRole(role);
+    loadUser();
+  }, []);
+
+  const login = async (email, password) => {
+    const res = await apiClient.login({ email, password });
+    if (res.success && res.token) {
+      localStorage.setItem('arclight_token', res.token);
+      setUser(res.user);
+      setCurrentRole(res.user.role);
+      return res.user;
+    }
+    throw new Error(res.message || 'Login failed');
   };
 
   const logout = () => {
-    setCurrentRole(ROLES.GUEST);
+    localStorage.removeItem('arclight_token');
     setUser(null);
-    localStorage.removeItem('aot_current_role');
+    setCurrentRole(ROLES.GUEST);
   };
 
   return (
-    <AuthContext.Provider value={{ currentRole, user, switchRole, loginAs, logout, DEMO_USERS }}>
+    <AuthContext.Provider value={{ user, currentRole, isAuthenticated: !!user, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -82,8 +69,6 @@ export function AuthProvider({ children }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 }

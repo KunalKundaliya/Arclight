@@ -1,3 +1,4 @@
+import { apiClient } from './apiClient';
 import { initialDrives } from '../data/mockDrives';
 import { initialCandidates } from '../data/mockCandidates';
 import { initialInterviewers } from '../data/mockInterviewers';
@@ -51,6 +52,33 @@ function save(key, data) {
 }
 
 export const storageService = {
+  // Sync all tables from PostgreSQL into local cache on app load
+  async syncFromBackend() {
+    try {
+      const [drives, candidates, interviewers, rooms, interviews, evaluations, notifications] = await Promise.all([
+        apiClient.getDrives().catch(() => null),
+        apiClient.getCandidates().catch(() => null),
+        apiClient.getInterviewers().catch(() => null),
+        apiClient.getRooms().catch(() => null),
+        apiClient.getInterviews().catch(() => null),
+        apiClient.getEvaluations().catch(() => null),
+        apiClient.checkHealth().then(() => fetch('/api/reports/notifications').then(r => r.json())).catch(() => null)
+      ]);
+
+      if (drives?.data) save(STORAGE_KEYS.DRIVES, drives.data);
+      if (candidates?.data) save(STORAGE_KEYS.CANDIDATES, candidates.data);
+      if (interviewers?.data) save(STORAGE_KEYS.INTERVIEWERS, interviewers.data);
+      if (rooms?.data) save(STORAGE_KEYS.ROOMS, rooms.data);
+      if (interviews?.data) save(STORAGE_KEYS.INTERVIEWS, interviews.data);
+      if (evaluations?.data) save(STORAGE_KEYS.EVALUATIONS, evaluations.data);
+      if (notifications?.data) save(STORAGE_KEYS.NOTIFICATIONS, notifications.data);
+
+      console.log('✅ Synchronized state with PostgreSQL database');
+    } catch (err) {
+      console.warn('⚠️ Could not sync with PostgreSQL, using offline cache:', err.message);
+    }
+  },
+
   // Drives
   getDrives() {
     return load(STORAGE_KEYS.DRIVES, initialDrives);
@@ -60,8 +88,11 @@ export const storageService = {
     const index = drives.findIndex(d => d.id === drive.id);
     if (index >= 0) {
       drives[index] = { ...drives[index], ...drive };
+      apiClient.updateDrive(drive.id, drive).catch(console.error);
     } else {
-      drives.unshift({ ...drive, id: drive.id || `drv-${Date.now()}` });
+      const newDrive = { ...drive, id: drive.id || `drv-${Date.now()}` };
+      drives.unshift(newDrive);
+      apiClient.createDrive(newDrive).catch(console.error);
     }
     save(STORAGE_KEYS.DRIVES, drives);
     return drives;
@@ -76,13 +107,16 @@ export const storageService = {
     const index = candidates.findIndex(c => c.id === candidate.id);
     if (index >= 0) {
       candidates[index] = { ...candidates[index], ...candidate };
+      apiClient.updateCandidate(candidate.id, candidate).catch(console.error);
     } else {
-      candidates.unshift({
+      const newCand = {
         ...candidate,
         id: candidate.id || `cand-${Date.now()}`,
         avatarBg: candidate.avatarBg || 'bg-indigo-600',
         initials: candidate.initials || candidate.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
-      });
+      };
+      candidates.unshift(newCand);
+      apiClient.createCandidate(newCand).catch(console.error);
     }
     save(STORAGE_KEYS.CANDIDATES, candidates);
     return candidates;
@@ -97,13 +131,16 @@ export const storageService = {
     const index = interviewers.findIndex(i => i.id === interviewer.id);
     if (index >= 0) {
       interviewers[index] = { ...interviewers[index], ...interviewer };
+      apiClient.updateInterviewer(interviewer.id, interviewer).catch(console.error);
     } else {
-      interviewers.unshift({
+      const newInt = {
         ...interviewer,
         id: interviewer.id || `int-${Date.now()}`,
         avatarBg: interviewer.avatarBg || 'bg-indigo-600',
         initials: interviewer.initials || interviewer.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
-      });
+      };
+      interviewers.unshift(newInt);
+      apiClient.createInterviewer(newInt).catch(console.error);
     }
     save(STORAGE_KEYS.INTERVIEWERS, interviewers);
     return interviewers;
@@ -119,7 +156,9 @@ export const storageService = {
     if (index >= 0) {
       rooms[index] = { ...rooms[index], ...room };
     } else {
-      rooms.unshift({ ...room, id: room.id || `room-${Date.now()}` });
+      const newRoom = { ...room, id: room.id || `room-${Date.now()}` };
+      rooms.unshift(newRoom);
+      apiClient.createRoom(newRoom).catch(console.error);
     }
     save(STORAGE_KEYS.ROOMS, rooms);
     return rooms;
@@ -134,8 +173,11 @@ export const storageService = {
     const index = interviews.findIndex(i => i.id === interview.id);
     if (index >= 0) {
       interviews[index] = { ...interviews[index], ...interview };
+      apiClient.updateInterview(interview.id, interview).catch(console.error);
     } else {
-      interviews.unshift({ ...interview, id: interview.id || `intv-${Date.now()}` });
+      const newIntv = { ...interview, id: interview.id || `intv-${Date.now()}` };
+      interviews.unshift(newIntv);
+      apiClient.createInterview(newIntv).catch(console.error);
     }
     save(STORAGE_KEYS.INTERVIEWS, interviews);
     return interviews;
@@ -143,6 +185,7 @@ export const storageService = {
   deleteInterview(interviewId) {
     const interviews = this.getInterviews().filter(i => i.id !== interviewId);
     save(STORAGE_KEYS.INTERVIEWS, interviews);
+    fetch(`/api/interviews/${interviewId}`, { method: 'DELETE' }).catch(console.error);
     return interviews;
   },
 
@@ -155,11 +198,13 @@ export const storageService = {
       n.id === notificationId ? { ...n, isRead: true } : n
     );
     save(STORAGE_KEYS.NOTIFICATIONS, notifs);
+    fetch(`/api/reports/notifications/${notificationId}/read`, { method: 'POST' }).catch(console.error);
     return notifs;
   },
   markAllAsRead() {
     const notifs = this.getNotifications().map(n => ({ ...n, isRead: true }));
     save(STORAGE_KEYS.NOTIFICATIONS, notifs);
+    fetch('/api/reports/notifications/read-all', { method: 'POST' }).catch(console.error);
     return notifs;
   },
 
@@ -170,16 +215,20 @@ export const storageService = {
   submitEvaluation(evaluation) {
     const evals = this.getEvaluations();
     const index = evals.findIndex(e => e.id === evaluation.id);
+    let savedEval;
     if (index >= 0) {
-      evals[index] = { ...evals[index], ...evaluation, submittedDate: new Date().toISOString().split('T')[0] };
+      savedEval = { ...evals[index], ...evaluation, submittedDate: new Date().toISOString().split('T')[0] };
+      evals[index] = savedEval;
     } else {
-      evals.unshift({
+      savedEval = {
         ...evaluation,
         id: evaluation.id || `eval-${Date.now()}`,
         submittedDate: new Date().toISOString().split('T')[0]
-      });
+      };
+      evals.unshift(savedEval);
     }
     save(STORAGE_KEYS.EVALUATIONS, evals);
+    apiClient.saveEvaluation(savedEval).catch(console.error);
 
     // Also update interview status if matching
     if (evaluation.interviewId) {
@@ -189,6 +238,7 @@ export const storageService = {
         interviews[intIdx].evaluationStatus = 'Completed';
         interviews[intIdx].score = evaluation.totalScore;
         save(STORAGE_KEYS.INTERVIEWS, interviews);
+        apiClient.updateInterview(evaluation.interviewId, interviews[intIdx]).catch(console.error);
       }
     }
     return evals;
@@ -207,13 +257,10 @@ export const storageService = {
 
   // Reset to default mock data
   resetAll() {
-    localStorage.removeItem(STORAGE_KEYS.DRIVES);
-    localStorage.removeItem(STORAGE_KEYS.CANDIDATES);
-    localStorage.removeItem(STORAGE_KEYS.INTERVIEWERS);
-    localStorage.removeItem(STORAGE_KEYS.ROOMS);
-    localStorage.removeItem(STORAGE_KEYS.INTERVIEWS);
-    localStorage.removeItem(STORAGE_KEYS.NOTIFICATIONS);
-    localStorage.removeItem(STORAGE_KEYS.EVALUATIONS);
-    localStorage.removeItem(STORAGE_KEYS.SETTINGS);
+    localStorage.clear();
+    apiClient.resetDatabase().catch(console.error);
   }
 };
+
+// Automatically sync on initial load
+storageService.syncFromBackend();

@@ -15,23 +15,55 @@ export default function LoginPage() {
   const { showToast } = useToast();
   const navigate = useNavigate();
 
-  const handleStandardLogin = (e) => {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+  const { login } = useAuth();
+
+  const handleStandardLogin = async (e) => {
     e.preventDefault();
-    switchRole(selectedRole);
-    showToast(`Logged in successfully as ${selectedRole.toUpperCase()}`, 'success', 'Session Established');
-    
-    if (selectedRole === ROLES.COORDINATOR) navigate('/coordinator');
-    else if (selectedRole === ROLES.INTERVIEWER) navigate('/interviewer');
-    else if (selectedRole === ROLES.CANDIDATE) navigate('/candidate');
+    setIsSubmitting(true);
+    try {
+      const loggedInUser = await login(email, password);
+      showToast(`Welcome back, ${loggedInUser.name}!`, 'success', 'Session Established');
+
+      if (loggedInUser.role === ROLES.COORDINATOR) navigate('/coordinator');
+      else if (loggedInUser.role === ROLES.INTERVIEWER) navigate('/interviewer');
+      else if (loggedInUser.role === ROLES.CANDIDATE) navigate('/candidate');
+    } catch (err) {
+      showToast(err.message || 'Invalid credentials', 'error', 'Login Failed');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleQuickDemoEntry = (role) => {
-    switchRole(role);
-    showToast(`Entering ${role.toUpperCase()} Workspace (Demo)`, 'info');
-    if (role === ROLES.COORDINATOR) navigate('/coordinator');
-    else if (role === ROLES.INTERVIEWER) navigate('/interviewer');
-    else if (role === ROLES.CANDIDATE) navigate('/candidate');
+  const handleQuickDemoEntry = async (role) => {
+    const credentials = {
+      [ROLES.COORDINATOR]: { email: 'maya.chen@arclight.io', password: 'password123' },
+      [ROLES.INTERVIEWER]: { email: 'priya.nair@northstar.io', password: 'password123' },
+      [ROLES.CANDIDATE]: { email: 'aanya.shah@webster.edu', password: 'password123' },
+    };
+
+    const target = credentials[role];
+    if (!target) return;
+
+    setEmail(target.email);
+    setPassword(target.password);
+    setSelectedRole(role);
+
+    setIsSubmitting(true);
+    try {
+      const loggedInUser = await login(target.email, target.password);
+      showToast(`Logged in as ${loggedInUser.name} (${loggedInUser.roleTitle})`, 'info');
+
+      if (loggedInUser.role === ROLES.COORDINATOR) navigate('/coordinator');
+      else if (loggedInUser.role === ROLES.INTERVIEWER) navigate('/interviewer');
+      else if (loggedInUser.role === ROLES.CANDIDATE) navigate('/candidate');
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
 
   return (
     <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center p-6 sm:p-8 lg:p-12 bg-[#FAFAFD]">

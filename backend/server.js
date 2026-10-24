@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import authRoutes from './src/routes/authRoutes.js';
 import express from 'express';
 import cors from 'cors';
 import { pool } from './src/config/db.js';
@@ -51,6 +52,7 @@ app.get('/api/health', async (req, res) => {
 
 
 // API Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/drives', drivesRoutes);
 app.use('/api/candidates', candidatesRoutes);
 app.use('/api/interviewers', interviewersRoutes);
