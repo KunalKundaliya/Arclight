@@ -1,5 +1,9 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import { pool } from './src/config/db.js';
+
+
 
 // Import route modules
 import drivesRoutes from './src/routes/drivesRoutes.js';
@@ -26,24 +30,25 @@ app.use((req, res, next) => {
 });
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'online',
-    service: 'ArcLight Constraint Recruitment API',
-    version: '1.0.0',
-    timestamp: new Date().toISOString(),
-    endpoints: [
-      '/api/drives',
-      '/api/candidates',
-      '/api/interviewers',
-      '/api/rooms',
-      '/api/interviews',
-      '/api/scheduler/solve',
-      '/api/evaluations',
-      '/api/reports'
-    ]
-  });
+app.get('/api/health', async (req, res) => {
+  try {
+    const dbRes = await pool.query('SELECT NOW()');
+    res.json({
+      status: 'online',
+      database: 'connected',
+      dbTime: dbRes.rows[0].now,
+      service: 'ArcLight Constraint Recruitment API',
+      version: '1.0.0'
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'degraded',
+      database: 'disconnected',
+      error: err.message
+    });
+  }
 });
+
 
 // API Routes
 app.use('/api/drives', drivesRoutes);

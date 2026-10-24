@@ -5,7 +5,7 @@ import { dbService } from '../services/dbService.js';
 const router = Router();
 
 // POST run CSP solver
-router.post('/solve', (req, res) => {
+router.post('/solve', async (req, res) => {
   try {
     const {
       driveId = 'drv-101',
@@ -17,9 +17,9 @@ router.post('/solve', (req, res) => {
       applyToDatabase = false
     } = req.body;
 
-    const candidates = dbService.getCandidates();
-    const interviewers = dbService.getInterviewers();
-    const rooms = dbService.getRooms();
+    const candidates = await dbService.getCandidates();
+    const interviewers = await dbService.getInterviewers();
+    const rooms = await dbService.getRooms();
 
     const result = BackendSchedulerEngine.solve({
       driveId,
@@ -33,11 +33,10 @@ router.post('/solve', (req, res) => {
       rooms
     });
 
-    // If caller requests automatic commitment to master schedule
     if (applyToDatabase && result.assignments?.length) {
-      result.assignments.forEach(item => {
-        dbService.createInterview(item);
-      });
+      for (const item of result.assignments) {
+        await dbService.createInterview(item);
+      }
     }
 
     res.json({

@@ -3,48 +3,63 @@ import { dbService } from '../services/dbService.js';
 
 const router = Router();
 
-// GET all interviews
-router.get('/', (req, res) => {
-  const { driveId, date, interviewerId, candidateId } = req.query;
-  let interviews = dbService.getInterviews();
+router.get('/', async (req, res) => {
+  try {
+    const { driveId, date, interviewerId, candidateId } = req.query;
+    let interviews = await dbService.getInterviews();
 
-  if (driveId) interviews = interviews.filter(i => i.driveId === driveId);
-  if (date) interviews = interviews.filter(i => i.date === date);
-  if (interviewerId) interviews = interviews.filter(i => (i.interviewerIds || []).includes(interviewerId));
-  if (candidateId) interviews = interviews.filter(i => i.candidateId === candidateId);
+    if (driveId) interviews = interviews.filter(i => i.driveId === driveId);
+    if (date) interviews = interviews.filter(i => i.date === date);
+    if (interviewerId) interviews = interviews.filter(i => (i.interviewerIds || []).includes(interviewerId));
+    if (candidateId) interviews = interviews.filter(i => i.candidateId === candidateId);
 
-  res.json({ success: true, count: interviews.length, data: interviews });
-});
-
-// GET interview by id
-router.get('/:id', (req, res) => {
-  const interview = dbService.getInterviewById(req.params.id);
-  if (!interview) return res.status(404).json({ success: false, message: 'Interview session not found' });
-  res.json({ success: true, data: interview });
-});
-
-// POST schedule / book interview
-router.post('/', (req, res) => {
-  const { candidateName, date, startTime } = req.body;
-  if (!candidateName || !date || !startTime) {
-    return res.status(400).json({ success: false, message: 'Candidate name, date and start time are required' });
+    res.json({ success: true, count: interviews.length, data: interviews });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
-  const created = dbService.createInterview(req.body);
-  res.status(201).json({ success: true, data: created });
 });
 
-// PUT update interview
-router.put('/:id', (req, res) => {
-  const updated = dbService.updateInterview(req.params.id, req.body);
-  if (!updated) return res.status(404).json({ success: false, message: 'Interview session not found' });
-  res.json({ success: true, data: updated });
+router.get('/:id', async (req, res) => {
+  try {
+    const interview = await dbService.getInterviewById(req.params.id);
+    if (!interview) return res.status(404).json({ success: false, message: 'Interview session not found' });
+    res.json({ success: true, data: interview });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
-// DELETE interview
-router.delete('/:id', (req, res) => {
-  const deleted = dbService.deleteInterview(req.params.id);
-  if (!deleted) return res.status(404).json({ success: false, message: 'Interview session not found' });
-  res.json({ success: true, message: 'Interview session cancelled' });
+router.post('/', async (req, res) => {
+  try {
+    const { candidateName, date, startTime } = req.body;
+    if (!candidateName || !date || !startTime) {
+      return res.status(400).json({ success: false, message: 'Candidate name, date and start time are required' });
+    }
+    const created = await dbService.createInterview(req.body);
+    res.status(201).json({ success: true, data: created });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+router.put('/:id', async (req, res) => {
+  try {
+    const updated = await dbService.updateInterview(req.params.id, req.body);
+    if (!updated) return res.status(404).json({ success: false, message: 'Interview session not found' });
+    res.json({ success: true, data: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+router.delete('/:id', async (req, res) => {
+  try {
+    const deleted = await dbService.deleteInterview(req.params.id);
+    if (!deleted) return res.status(404).json({ success: false, message: 'Interview session not found' });
+    res.json({ success: true, message: 'Interview session cancelled' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 export default router;

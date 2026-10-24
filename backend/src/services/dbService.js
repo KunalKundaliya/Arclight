@@ -1,10 +1,4 @@
-import { initialDrives } from '../data/mockDrives.js';
-import { initialCandidates } from '../data/mockCandidates.js';
-import { initialInterviewers } from '../data/mockInterviewers.js';
-import { initialRooms } from '../data/mockRooms.js';
-import { initialInterviews } from '../data/mockInterviews.js';
-import { initialEvaluations } from '../data/mockEvaluations.js';
-import { initialNotifications } from '../data/mockNotifications.js';
+import { pool } from '../config/db.js';
 import {
   mockOverviewChartData,
   mockInterviewerUtilization,
@@ -13,236 +7,390 @@ import {
   mockKpis
 } from '../data/mockReports.js';
 
+// Utility helper: converts snake_case database row keys to camelCase for the frontend
+function toCamel(obj) {
+  if (!obj || typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) return obj.map(toCamel);
+  const newObj = {};
+  for (const key of Object.keys(obj)) {
+    const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+    newObj[camelKey] = obj[key];
+  }
+  return newObj;
+}
+
 class DbService {
-  constructor() {
-    this.resetDatabase();
-  }
-
-  resetDatabase() {
-    this.drives = JSON.parse(JSON.stringify(initialDrives));
-    this.candidates = JSON.parse(JSON.stringify(initialCandidates));
-    this.interviewers = JSON.parse(JSON.stringify(initialInterviewers));
-    this.rooms = JSON.parse(JSON.stringify(initialRooms));
-    this.interviews = JSON.parse(JSON.stringify(initialInterviews));
-    this.evaluations = JSON.parse(JSON.stringify(initialEvaluations));
-    this.notifications = JSON.parse(JSON.stringify(initialNotifications));
-    this.reports = {
-      overviewChart: JSON.parse(JSON.stringify(mockOverviewChartData)),
-      interviewerUtilization: JSON.parse(JSON.stringify(mockInterviewerUtilization)),
-      roundFunnel: JSON.parse(JSON.stringify(mockRoundFunnel)),
-      roundDistribution: JSON.parse(JSON.stringify(mockRoundDistribution)),
-      kpis: JSON.parse(JSON.stringify(mockKpis))
-    };
-  }
-
   // --- DRIVES ---
-  getDrives() {
-    return this.drives;
+  async getDrives() {
+    const res = await pool.query('SELECT * FROM drives ORDER BY created_at DESC');
+    return toCamel(res.rows);
   }
 
-  getDriveById(id) {
-    return this.drives.find(d => d.id === id);
+  async getDriveById(id) {
+    const res = await pool.query('SELECT * FROM drives WHERE id = $1', [id]);
+    return toCamel(res.rows[0]) || null;
   }
 
-  createDrive(data) {
-    const newDrive = {
-      ...data,
-      id: data.id || `drv-${Date.now()}`,
-      createdAt: new Date().toISOString()
-    };
-    this.drives.unshift(newDrive);
-    return newDrive;
+  async createDrive(data) {
+    const id = data.id || `drv-${Date.now()}`;
+    const res = await pool.query(
+      `INSERT INTO drives (id, name, company, role, start_date, end_date, candidates_count, rounds, status, description, target_hires, completed_interviews, total_scheduled)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+       RETURNING *`,
+      [
+        id,
+        data.name,
+        data.company || '',
+        data.role,
+        data.startDate || new Date(),
+        data.endDate || new Date(),
+        data.candidatesCount || 0,
+        JSON.stringify(data.rounds || []),
+        data.status || 'Active',
+        data.description || '',
+        data.targetHires || 0,
+        data.completedInterviews || 0,
+        data.totalScheduled || 0
+      ]
+    );
+    return toCamel(res.rows[0]);
   }
 
-  updateDrive(id, data) {
-    const idx = this.drives.findIndex(d => d.id === id);
-    if (idx === -1) return null;
-    this.drives[idx] = { ...this.drives[idx], ...data };
-    return this.drives[idx];
+  async updateDrive(id, data) {
+    const res = await pool.query(
+      `UPDATE drives 
+       SET name = COALESCE($1, name),
+           role = COALESCE($2, role),
+           status = COALESCE($3, status),
+           description = COALESCE($4, description)
+       WHERE id = $5
+       RETURNING *`,
+      [data.name, data.role, data.status, data.description, id]
+    );
+    return toCamel(res.rows[0]) || null;
   }
 
-  deleteDrive(id) {
-    const idx = this.drives.findIndex(d => d.id === id);
-    if (idx === -1) return false;
-    this.drives.splice(idx, 1);
-    return true;
+  async deleteDrive(id) {
+    const res = await pool.query('DELETE FROM drives WHERE id = $1', [id]);
+    return res.rowCount > 0;
   }
 
   // --- CANDIDATES ---
-  getCandidates() {
-    return this.candidates;
+  async getCandidates() {
+    const res = await pool.query('SELECT * FROM candidates ORDER BY applied_date DESC');
+    return toCamel(res.rows);
   }
 
-  getCandidateById(id) {
-    return this.candidates.find(c => c.id === id);
+  async getCandidateById(id) {
+    const res = await pool.query('SELECT * FROM candidates WHERE id = $1', [id]);
+    return toCamel(res.rows[0]) || null;
   }
 
-  createCandidate(data) {
-    const newCandidate = {
-      ...data,
-      id: data.id || `cand-${Date.now()}`,
-      appliedDate: data.appliedDate || new Date().toISOString().split('T')[0]
-    };
-    this.candidates.unshift(newCandidate);
-    return newCandidate;
+  async createCandidate(data) {
+    const id = data.id || `cand-${Date.now()}`;
+    const res = await pool.query(
+      `INSERT INTO candidates (id, name, email, phone, applied_role, drive_id, skills, current_round, stage, status, score, avatar_bg, initials, applied_date, room, interviewer, scheduled_time, notes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+       RETURNING *`,
+      [
+        id,
+        data.name,
+        data.email,
+        data.phone || '',
+        data.appliedRole || '',
+        data.driveId || null,
+        JSON.stringify(data.skills || []),
+        data.currentRound || 'R1 Technical Screen',
+        data.stage || 'Technical',
+        data.status || 'Scheduled',
+        data.score || 0,
+        data.avatarBg || 'bg-indigo-600',
+        data.initials || data.name.slice(0, 2).toUpperCase(),
+        data.appliedDate || new Date(),
+        data.room || '',
+        data.interviewer || '',
+        data.scheduledTime || '',
+        data.notes || ''
+      ]
+    );
+    return toCamel(res.rows[0]);
   }
 
-  updateCandidate(id, data) {
-    const idx = this.candidates.findIndex(c => c.id === id);
-    if (idx === -1) return null;
-    this.candidates[idx] = { ...this.candidates[idx], ...data };
-    return this.candidates[idx];
+  async updateCandidate(id, data) {
+    const res = await pool.query(
+      `UPDATE candidates 
+       SET name = COALESCE($1, name),
+           email = COALESCE($2, email),
+           status = COALESCE($3, status),
+           score = COALESCE($4, score),
+           room = COALESCE($5, room),
+           interviewer = COALESCE($6, interviewer),
+           scheduled_time = COALESCE($7, scheduled_time)
+       WHERE id = $8
+       RETURNING *`,
+      [data.name, data.email, data.status, data.score, data.room, data.interviewer, data.scheduledTime, id]
+    );
+    return toCamel(res.rows[0]) || null;
   }
 
-  deleteCandidate(id) {
-    const idx = this.candidates.findIndex(c => c.id === id);
-    if (idx === -1) return false;
-    this.candidates.splice(idx, 1);
-    return true;
+  async deleteCandidate(id) {
+    const res = await pool.query('DELETE FROM candidates WHERE id = $1', [id]);
+    return res.rowCount > 0;
   }
 
   // --- INTERVIEWERS ---
-  getInterviewers() {
-    return this.interviewers;
+  async getInterviewers() {
+    const res = await pool.query('SELECT * FROM interviewers ORDER BY name ASC');
+    return toCamel(res.rows);
   }
 
-  getInterviewerById(id) {
-    return this.interviewers.find(i => i.id === id);
+  async getInterviewerById(id) {
+    const res = await pool.query('SELECT * FROM interviewers WHERE id = $1', [id]);
+    return toCamel(res.rows[0]) || null;
   }
 
-  createInterviewer(data) {
-    const newInterviewer = {
-      ...data,
-      id: data.id || `int-${Date.now()}`,
-      rating: data.rating || 5.0,
-      assignedInterviews: data.assignedInterviews || 0
-    };
-    this.interviewers.unshift(newInterviewer);
-    return newInterviewer;
+  async createInterviewer(data) {
+    const id = data.id || `int-${Date.now()}`;
+    const res = await pool.query(
+      `INSERT INTO interviewers (id, name, email, title, department, skills, max_interviews_per_day, assigned_interviews, rating, status, avatar_bg, initials, availability_summary, weekly_availability)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+       RETURNING *`,
+      [
+        id,
+        data.name,
+        data.email,
+        data.title || '',
+        data.department || '',
+        JSON.stringify(data.skills || []),
+        data.maxInterviewsPerDay || 3,
+        data.assignedInterviews || 0,
+        data.rating || 5.0,
+        data.status || 'Available',
+        data.avatarBg || 'bg-indigo-600',
+        data.initials || data.name.slice(0, 2).toUpperCase(),
+        data.availabilitySummary || '',
+        JSON.stringify(data.weeklyAvailability || {})
+      ]
+    );
+    return toCamel(res.rows[0]);
   }
 
-  updateInterviewer(id, data) {
-    const idx = this.interviewers.findIndex(i => i.id === id);
-    if (idx === -1) return null;
-    this.interviewers[idx] = { ...this.interviewers[idx], ...data };
-    return this.interviewers[idx];
+  async updateInterviewer(id, data) {
+    const res = await pool.query(
+      `UPDATE interviewers 
+       SET name = COALESCE($1, name),
+           status = COALESCE($2, status),
+           assigned_interviews = COALESCE($3, assigned_interviews)
+       WHERE id = $4
+       RETURNING *`,
+      [data.name, data.status, data.assignedInterviews, id]
+    );
+    return toCamel(res.rows[0]) || null;
   }
 
-  deleteInterviewer(id) {
-    const idx = this.interviewers.findIndex(i => i.id === id);
-    if (idx === -1) return false;
-    this.interviewers.splice(idx, 1);
-    return true;
+  async deleteInterviewer(id) {
+    const res = await pool.query('DELETE FROM interviewers WHERE id = $1', [id]);
+    return res.rowCount > 0;
   }
 
   // --- ROOMS ---
-  getRooms() {
-    return this.rooms;
+  async getRooms() {
+    const res = await pool.query('SELECT * FROM rooms ORDER BY name ASC');
+    return toCamel(res.rows);
   }
 
-  getRoomById(id) {
-    return this.rooms.find(r => r.id === id);
+  async getRoomById(id) {
+    const res = await pool.query('SELECT * FROM rooms WHERE id = $1', [id]);
+    return toCamel(res.rows[0]) || null;
   }
 
-  createRoom(data) {
-    const newRoom = {
-      ...data,
-      id: data.id || `rm-${Date.now()}`
-    };
-    this.rooms.unshift(newRoom);
-    return newRoom;
+  async createRoom(data) {
+    const id = data.id || `rm-${Date.now()}`;
+    const res = await pool.query(
+      `INSERT INTO rooms (id, name, location, capacity, type, equipment, status, features, current_status_note)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       RETURNING *`,
+      [
+        id,
+        data.name,
+        data.location || '',
+        data.capacity || 4,
+        data.type || 'Physical Pod',
+        JSON.stringify(data.equipment || []),
+        data.status || 'Available',
+        JSON.stringify(data.features || []),
+        data.currentStatusNote || ''
+      ]
+    );
+    return toCamel(res.rows[0]);
   }
 
-  updateRoom(id, data) {
-    const idx = this.rooms.findIndex(r => r.id === id);
-    if (idx === -1) return null;
-    this.rooms[idx] = { ...this.rooms[idx], ...data };
-    return this.rooms[idx];
+  async updateRoom(id, data) {
+    const res = await pool.query(
+      `UPDATE rooms 
+       SET name = COALESCE($1, name),
+           status = COALESCE($2, status),
+           current_status_note = COALESCE($3, current_status_note)
+       WHERE id = $4
+       RETURNING *`,
+      [data.name, data.status, data.currentStatusNote, id]
+    );
+    return toCamel(res.rows[0]) || null;
   }
 
-  deleteRoom(id) {
-    const idx = this.rooms.findIndex(r => r.id === id);
-    if (idx === -1) return false;
-    this.rooms.splice(idx, 1);
-    return true;
+  async deleteRoom(id) {
+    const res = await pool.query('DELETE FROM rooms WHERE id = $1', [id]);
+    return res.rowCount > 0;
   }
 
   // --- INTERVIEWS ---
-  getInterviews() {
-    return this.interviews;
+  async getInterviews() {
+    const res = await pool.query('SELECT * FROM interviews ORDER BY date ASC, start_time ASC');
+    return toCamel(res.rows);
   }
 
-  getInterviewById(id) {
-    return this.interviews.find(i => i.id === id);
+  async getInterviewById(id) {
+    const res = await pool.query('SELECT * FROM interviews WHERE id = $1', [id]);
+    return toCamel(res.rows[0]) || null;
   }
 
-  createInterview(data) {
-    const newInterview = {
-      ...data,
-      id: data.id || `intv-${Date.now()}`
-    };
-    this.interviews.unshift(newInterview);
-    return newInterview;
+  async createInterview(data) {
+    const id = data.id || `intv-${Date.now()}`;
+    const res = await pool.query(
+      `INSERT INTO interviews (id, candidate_id, candidate_name, candidate_email, candidate_role, drive_id, interviewer_ids, interviewer_names, room_id, room_name, round_type, round_title, date, day_name, start_time, end_time, duration, status, evaluation_status, meeting_url, score, badge_text, notes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+       RETURNING *`,
+      [
+        id,
+        data.candidateId || null,
+        data.candidateName,
+        data.candidateEmail || '',
+        data.candidateRole || '',
+        data.driveId || null,
+        JSON.stringify(data.interviewerIds || []),
+        JSON.stringify(data.interviewerNames || []),
+        data.roomId || null,
+        data.roomName || '',
+        data.roundType || 'Technical',
+        data.roundTitle || 'Technical Screen',
+        data.date,
+        data.dayName || '',
+        data.startTime,
+        data.endTime || '',
+        data.duration || '45 min',
+        data.status || 'Scheduled',
+        data.evaluationStatus || 'Pending',
+        data.meetingUrl || '',
+        data.score || null,
+        data.badgeText || '',
+        data.notes || ''
+      ]
+    );
+    return toCamel(res.rows[0]);
   }
 
-  updateInterview(id, data) {
-    const idx = this.interviews.findIndex(i => i.id === id);
-    if (idx === -1) return null;
-    this.interviews[idx] = { ...this.interviews[idx], ...data };
-    return this.interviews[idx];
+  async updateInterview(id, data) {
+    const res = await pool.query(
+      `UPDATE interviews 
+       SET status = COALESCE($1, status),
+           date = COALESCE($2, date),
+           start_time = COALESCE($3, start_time),
+           notes = COALESCE($4, notes)
+       WHERE id = $5
+       RETURNING *`,
+      [data.status, data.date, data.startTime, data.notes, id]
+    );
+    return toCamel(res.rows[0]) || null;
   }
 
-  deleteInterview(id) {
-    const idx = this.interviews.findIndex(i => i.id === id);
-    if (idx === -1) return false;
-    this.interviews.splice(idx, 1);
-    return true;
+  async deleteInterview(id) {
+    const res = await pool.query('DELETE FROM interviews WHERE id = $1', [id]);
+    return res.rowCount > 0;
   }
 
   // --- EVALUATIONS ---
-  getEvaluations() {
-    return this.evaluations;
+  async getEvaluations() {
+    const res = await pool.query('SELECT * FROM evaluations ORDER BY submitted_date DESC');
+    return toCamel(res.rows);
   }
 
-  getEvaluationById(id) {
-    return this.evaluations.find(e => e.id === id);
+  async getEvaluationById(id) {
+    const res = await pool.query('SELECT * FROM evaluations WHERE id = $1', [id]);
+    return toCamel(res.rows[0]) || null;
   }
 
-  saveEvaluation(data) {
-    const idx = this.evaluations.findIndex(e => e.id === data.id);
-    if (idx >= 0) {
-      this.evaluations[idx] = { ...this.evaluations[idx], ...data };
-      return this.evaluations[idx];
-    } else {
-      const newEval = {
-        ...data,
-        id: data.id || `eval-${Date.now()}`,
-        submittedAt: new Date().toISOString()
-      };
-      this.evaluations.unshift(newEval);
-      return newEval;
-    }
+  async saveEvaluation(data) {
+    const id = data.id || `eval-${Date.now()}`;
+    const res = await pool.query(
+      `INSERT INTO evaluations (id, interview_id, candidate_id, candidate_name, role, round, interviewer_name, interviewer_id, status, total_score, recommendation, rubric, strengths, growth_areas, summary, submitted_date)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+       ON CONFLICT (id) DO UPDATE 
+       SET total_score = EXCLUDED.total_score,
+           recommendation = EXCLUDED.recommendation,
+           rubric = EXCLUDED.rubric,
+           strengths = EXCLUDED.strengths,
+           growth_areas = EXCLUDED.growth_areas,
+           summary = EXCLUDED.summary
+       RETURNING *`,
+      [
+        id,
+        data.interviewId || null,
+        data.candidateId || null,
+        data.candidateName || '',
+        data.role || '',
+        data.round || '',
+        data.interviewerName || '',
+        data.interviewerId || null,
+        data.status || 'Completed',
+        data.totalScore || 0,
+        data.recommendation || '',
+        JSON.stringify(data.rubric || {}),
+        data.strengths || '',
+        data.growthAreas || '',
+        data.summary || '',
+        data.submittedDate || new Date()
+      ]
+    );
+    return toCamel(res.rows[0]);
   }
 
   // --- NOTIFICATIONS ---
-  getNotifications() {
-    return this.notifications;
+  async getNotifications() {
+    const res = await pool.query('SELECT * FROM notifications ORDER BY created_at DESC');
+    return toCamel(res.rows);
   }
 
-  markNotificationRead(id) {
-    const notif = this.notifications.find(n => n.id === id);
-    if (notif) notif.read = true;
-    return notif;
+  async markNotificationRead(id) {
+    const res = await pool.query('UPDATE notifications SET read = true WHERE id = $1 RETURNING *', [id]);
+    return toCamel(res.rows[0]);
   }
 
-  markAllNotificationsRead() {
-    this.notifications.forEach(n => { n.read = true; });
-    return this.notifications;
+  async markAllNotificationsRead() {
+    const res = await pool.query('UPDATE notifications SET read = true RETURNING *');
+    return toCamel(res.rows);
   }
 
   // --- REPORTS ---
-  getReports() {
-    return this.reports;
+  async getReports() {
+    // Dynamic calculation from real database records
+    const [drivesCount, candCount, intvCount] = await Promise.all([
+      pool.query('SELECT COUNT(*) FROM drives WHERE status = $1', ['Active']),
+      pool.query('SELECT COUNT(*) FROM candidates'),
+      pool.query('SELECT COUNT(*) FROM interviews')
+    ]);
+
+    return {
+      overviewChart: mockOverviewChartData,
+      interviewerUtilization: mockInterviewerUtilization,
+      roundFunnel: mockRoundFunnel,
+      roundDistribution: mockRoundDistribution,
+      kpis: {
+        ...mockKpis,
+        activeDrives: parseInt(drivesCount.rows[0].count, 10),
+        candidatesInNorthstar: parseInt(candCount.rows[0].count, 10),
+        interviewsThisWeek: parseInt(intvCount.rows[0].count, 10),
+      }
+    };
   }
 }
 

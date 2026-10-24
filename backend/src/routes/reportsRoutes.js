@@ -3,34 +3,40 @@ import { dbService } from '../services/dbService.js';
 
 const router = Router();
 
-// GET all reports
-router.get('/', (req, res) => {
-  const reports = dbService.getReports();
-  res.json({ success: true, data: reports });
+router.get('/', async (req, res) => {
+  try {
+    const reports = await dbService.getReports();
+    res.json({ success: true, data: reports });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
-// GET notifications
-router.get('/notifications', (req, res) => {
-  const notifications = dbService.getNotifications();
-  res.json({ success: true, count: notifications.length, data: notifications });
+router.get('/notifications', async (req, res) => {
+  try {
+    const notifications = await dbService.getNotifications();
+    res.json({ success: true, count: notifications.length, data: notifications });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
-// POST mark notification read
-router.post('/notifications/:id/read', (req, res) => {
-  const notif = dbService.markNotificationRead(req.params.id);
-  res.json({ success: true, data: notif });
+router.post('/notifications/:id/read', async (req, res) => {
+  try {
+    const notif = await dbService.markNotificationRead(req.params.id);
+    res.json({ success: true, data: notif });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
-// POST mark all notifications read
-router.post('/notifications/read-all', (req, res) => {
-  const notifs = dbService.markAllNotificationsRead();
-  res.json({ success: true, data: notifs });
-});
-
-// POST reset database
-router.post('/reset', (req, res) => {
-  dbService.resetDatabase();
-  res.json({ success: true, message: 'Database reset to initial Webster 2026 placement state' });
+router.post('/notifications/read-all', async (req, res) => {
+  try {
+    const notifs = await dbService.markAllNotificationsRead();
+    res.json({ success: true, data: notifs });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 export default router;

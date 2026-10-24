@@ -3,24 +3,32 @@ import { dbService } from '../services/dbService.js';
 
 const router = Router();
 
-// GET all evaluations
-router.get('/', (req, res) => {
-  const evaluations = dbService.getEvaluations();
-  res.json({ success: true, count: evaluations.length, data: evaluations });
+router.get('/', async (req, res) => {
+  try {
+    const evaluations = await dbService.getEvaluations();
+    res.json({ success: true, count: evaluations.length, data: evaluations });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
-// GET evaluation by id
-router.get('/:id', (req, res) => {
-  const evaluation = dbService.getEvaluationById(req.params.id);
-  if (!evaluation) return res.status(404).json({ success: false, message: 'Evaluation scorecard not found' });
-  res.json({ success: true, data: evaluation });
+router.get('/:id', async (req, res) => {
+  try {
+    const evaluation = await dbService.getEvaluationById(req.params.id);
+    if (!evaluation) return res.status(404).json({ success: false, message: 'Evaluation scorecard not found' });
+    res.json({ success: true, data: evaluation });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
-// POST save / submit evaluation
-router.post('/', (req, res) => {
-  const { candidateId, interviewerId } = req.body;
-  const saved = dbService.saveEvaluation(req.body);
-  res.status(201).json({ success: true, data: saved });
+router.post('/', async (req, res) => {
+  try {
+    const saved = await dbService.saveEvaluation(req.body);
+    res.status(201).json({ success: true, data: saved });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 export default router;
