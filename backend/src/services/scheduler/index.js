@@ -7,3 +7,4 @@
 export * from './TimezoneUtils.js';
 export * from './IntervalUtils.js';
 export * from './TimeGridGenerator.js';
+export * from './ConstraintValidator.js';
