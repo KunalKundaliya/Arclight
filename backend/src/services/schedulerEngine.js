@@ -1,13 +1,19 @@
 /**
  * ArcLight - Backend Deterministic Constraint-Satisfaction Engine
  * 
- * Powered by Stage 4 CspSolver:
- * Evaluates candidate-panel-room pairings against availability,
- * max interviews per day, room capacity, equipment, and buffer times
- * using MRV heuristics, LCV value ordering, and Forward Checking.
+ * Powered by Stage 4 CspSolver & Stage 5 ScheduleOptimizer:
+ * 1. Hard Constraints: Evaluates candidate-panel-room pairings against availability,
+ *    max interviews per day, room capacity, equipment, and buffer times
+ *    using MRV heuristics, LCV value ordering, and Forward Checking.
+ * 2. Soft Constraints: Applies Simulated Annealing and Hill Climbing to optimize
+ *    faculty workload balance, fatigue reduction, schedule compactness, and room stability.
  */
 
-import { CspSolver } from './scheduler/index.js';
+import {
+  CspSolver,
+  SoftConstraintEvaluator,
+  ScheduleOptimizer
+} from './scheduler/index.js';
 
 export class BackendSchedulerEngine {
   static solve({
@@ -46,7 +52,7 @@ export class BackendSchedulerEngine {
     const interviewerMap = new Map(activeInterviewers.map(i => [i.id, i]));
     const roomMap = new Map(activeRooms.map(r => [r.id, r]));
 
-    // Execute Stage 4 CSP Engine
+    // Step 1: Execute Stage 4 CSP Engine for Hard-Constraint Feasibility
     const solverResult = CspSolver.solveDrive({
       driveId,
       roundName,
@@ -68,7 +74,7 @@ export class BackendSchedulerEngine {
     });
 
     let intvCounter = 1;
-    const formattedAssignments = (solverResult.assignments || []).map(a => {
+    let formattedAssignments = (solverResult.assignments || []).map(a => {
       const interviewerNames = (a.interviewerIds || []).map(
         id => interviewerMap.get(id)?.name || id
       );
@@ -97,14 +103,52 @@ export class BackendSchedulerEngine {
       };
     });
 
+    // Step 2: Execute Stage 5 Soft-Constraint Optimization
+    let optimizationReport = null;
+    const context = {
+      candidates: candidatePool,
+      interviewers: activeInterviewers,
+      rooms: activeRooms
+    };
+
+    if (options.optimize !== false && formattedAssignments.length > 1) {
+      optimizationReport = ScheduleOptimizer.optimize({
+        assignments: formattedAssignments,
+        context,
+        options: {
+          algorithm: options.optimizerAlgorithm || 'SIMULATED_ANNEALING',
+          maxIterations: options.maxIterations || 150
+        }
+      });
+
+      if (optimizationReport.success && optimizationReport.assignments) {
+        formattedAssignments = optimizationReport.assignments;
+      }
+    } else {
+      const initialScore = SoftConstraintEvaluator.evaluateSchedule(formattedAssignments, context);
+      optimizationReport = {
+        initialScore,
+        optimizedScore: initialScore,
+        improvementPercent: 0,
+        penaltyReduction: 0
+      };
+    }
+
     return {
       success: solverResult.success,
-      solver: 'ArcLight CSP Engine (Deterministic v2.0 - Stage 4)',
+      solver: 'ArcLight CSP Engine (Deterministic v2.0 - Stage 4 & 5)',
       totalVariablesEvaluated: solverResult.telemetry?.nodeVisits || candidatePool.length,
       solutionFound: solverResult.isComplete,
       solveTimeMs: solverResult.telemetry?.solveTimeMs || 0,
       telemetry: solverResult.telemetry,
       validation: solverResult.validation,
+      softConstraints: {
+        score: optimizationReport.optimizedScore?.fitnessScore || optimizationReport.initialScore.fitnessScore,
+        grade: optimizationReport.optimizedScore?.grade || optimizationReport.initialScore.grade,
+        penalty: optimizationReport.optimizedScore?.totalPenalty || optimizationReport.initialScore.totalPenalty,
+        improvementPercent: optimizationReport.improvementPercent || 0,
+        breakdown: optimizationReport.optimizedScore?.breakdown || optimizationReport.initialScore.breakdown
+      },
       metrics: {
         totalRequested: candidatePool.length,
         scheduledCount: formattedAssignments.length,
