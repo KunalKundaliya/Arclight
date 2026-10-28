@@ -5,6 +5,7 @@ import {
   SchedulePersistenceService,
   DynamicRepairEngine
 } from '../services/scheduler/index.js';
+import { eventHub } from '../services/eventHub.js';
 
 const router = Router();
 
@@ -147,6 +148,11 @@ router.post('/apply', async (req, res) => {
       });
     }
 
+    eventHub.broadcast('SCHEDULE_APPLIED', {
+      driveId,
+      count: result.appliedCount
+    });
+
     res.json({
       success: true,
       message: `Successfully and safely persisted ${result.appliedCount} interview sessions`,
@@ -195,6 +201,11 @@ router.post('/rollback', async (req, res) => {
         details: result
       });
     }
+
+    eventHub.broadcast('SCHEDULE_ROLLEDBACK', {
+      driveId,
+      count: result.rolledBackCount
+    });
 
     res.json({
       success: true,
@@ -285,6 +296,13 @@ router.post('/reschedule/faculty-callout', async (req, res) => {
         description: `Automated repair executed for ${interviewerName} on ${date}. ${repairResult.displacedAssignments?.length || 0} sessions reassigned with zero hard-constraint violations.`,
         type: 'warning'
       }).catch(console.error);
+
+      eventHub.broadcast('SCHEDULE_REPAIRED', {
+        type: 'FACULTY_CALLOUT',
+        interviewerId: unavailableInterviewerId,
+        date,
+        displacedCount: repairResult.displacedAssignments?.length || 0
+      });
     }
 
     res.json({
@@ -344,6 +362,15 @@ router.post('/reschedule/room-outage', async (req, res) => {
         driveId,
         assignments: repairResult.schedule,
         options: { replaceExistingForDrive: true }
+      });
+    }
+
+    if (repairResult.success) {
+      eventHub.broadcast('SCHEDULE_REPAIRED', {
+        type: 'ROOM_OUTAGE',
+        roomId: offlineRoomId,
+        date,
+        displacedCount: repairResult.displacedAssignments?.length || 0
       });
     }
 

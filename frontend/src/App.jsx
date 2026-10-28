@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
+import { RealtimeProvider } from './context/RealtimeContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import { storageService } from './services/storageService';
 
@@ -72,7 +73,8 @@ export default function App() {
       )}
       <AuthProvider>
         <ToastProvider>
-          <Routes>
+          <RealtimeProvider>
+            <Routes>
             {/* Public Routes */}
             <Route path="/" element={<PublicLayout />}>
               <Route index element={<LandingPage />} />
@@ -142,8 +144,9 @@ export default function App() {
             {/* Fallback to Landing */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </ToastProvider>
-      </AuthProvider>
+        </RealtimeProvider>
+      </ToastProvider>
+    </AuthProvider>
     </BrowserRouter>
   );
 }

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { dbService } from '../services/dbService.js';
+import { eventHub } from '../services/eventHub.js';
 
 const router = Router();
 
@@ -32,6 +33,13 @@ router.post('/', async (req, res) => {
       description: `${saved.interviewerName || 'Faculty'} submitted evaluation for ${saved.candidateName} (${saved.recommendation || 'Evaluated'}, score: ${saved.totalScore}/100).`,
       type: 'info'
     }).catch(console.error);
+
+    eventHub.broadcast('EVALUATION_SUBMITTED', {
+      candidateName: saved.candidateName,
+      interviewerName: saved.interviewerName,
+      score: saved.totalScore,
+      recommendation: saved.recommendation
+    });
 
     res.status(201).json({ success: true, data: saved });
   } catch (err) {
