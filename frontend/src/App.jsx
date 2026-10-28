@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
+import { storageService } from './services/storageService';
 
 // Layouts
 import PublicLayout from './layouts/PublicLayout';
@@ -48,8 +49,27 @@ import CandidateNotificationsPage from './pages/candidate/CandidateNotifications
 import CandidateProfilePage from './pages/candidate/CandidateProfilePage';
 
 export default function App() {
+  const [isSyncing, setIsSyncing] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    storageService.syncFromBackend().finally(() => {
+      if (mounted) {
+        setIsSyncing(false);
+      }
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   return (
     <BrowserRouter>
+      {isSyncing && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 text-white text-[10px] font-mono py-0.5 text-center tracking-wider shadow-md animate-pulse">
+          ⚡ Synchronizing with PostgreSQL Database...
+        </div>
+      )}
       <AuthProvider>
         <ToastProvider>
           <Routes>

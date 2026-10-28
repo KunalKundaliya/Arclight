@@ -15,6 +15,7 @@ import interviewsRoutes from './src/routes/interviewsRoutes.js';
 import schedulerRoutes from './src/routes/schedulerRoutes.js';
 import evaluationsRoutes from './src/routes/evaluationsRoutes.js';
 import reportsRoutes from './src/routes/reportsRoutes.js';
+import notificationsRoutes from './src/routes/notificationsRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -61,6 +62,7 @@ app.use('/api/interviews', interviewsRoutes);
 app.use('/api/scheduler', schedulerRoutes);
 app.use('/api/evaluations', evaluationsRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 // 404 handler
 app.use((req, res) => {

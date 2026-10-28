@@ -177,14 +177,34 @@ class DbService {
   }
 
   async updateInterviewer(id, data) {
+    const weeklyAvail = data.weeklyAvailability ? JSON.stringify(data.weeklyAvailability) : null;
+    const skills = data.skills ? JSON.stringify(data.skills) : null;
+
     const res = await pool.query(
       `UPDATE interviewers 
        SET name = COALESCE($1, name),
            status = COALESCE($2, status),
-           assigned_interviews = COALESCE($3, assigned_interviews)
-       WHERE id = $4
+           assigned_interviews = COALESCE($3, assigned_interviews),
+           max_interviews_per_day = COALESCE($4, max_interviews_per_day),
+           availability_summary = COALESCE($5, availability_summary),
+           weekly_availability = COALESCE($6, weekly_availability),
+           skills = COALESCE($7, skills),
+           title = COALESCE($8, title),
+           department = COALESCE($9, department)
+       WHERE id = $10
        RETURNING *`,
-      [data.name, data.status, data.assignedInterviews, id]
+      [
+        data.name || null,
+        data.status || null,
+        data.assignedInterviews !== undefined ? data.assignedInterviews : null,
+        data.maxInterviewsPerDay !== undefined ? data.maxInterviewsPerDay : null,
+        data.availabilitySummary || null,
+        weeklyAvail,
+        skills,
+        data.title || null,
+        data.department || null,
+        id
+      ]
     );
     return toCamel(res.rows[0]) || null;
   }

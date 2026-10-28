@@ -169,6 +169,17 @@ export const apiClient = {
     return request('/evaluations', { method: 'POST', body: JSON.stringify(data) });
   },
 
+  // Notifications
+  getNotifications() {
+    return request('/notifications');
+  },
+  markNotificationRead(id) {
+    return request(`/notifications/${id}/read`, { method: 'PUT' });
+  },
+  markAllNotificationsRead() {
+    return request('/notifications/read-all', { method: 'PUT' });
+  },
+
   // Reports
   getReports() {
     return request('/reports');

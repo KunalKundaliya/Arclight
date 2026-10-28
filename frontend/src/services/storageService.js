@@ -62,7 +62,7 @@ export const storageService = {
         apiClient.getRooms().catch(() => null),
         apiClient.getInterviews().catch(() => null),
         apiClient.getEvaluations().catch(() => null),
-        apiClient.checkHealth().then(() => fetch('/api/reports/notifications').then(r => r.json())).catch(() => null)
+        apiClient.getNotifications().catch(() => null)
       ]);
 
       if (drives?.data) save(STORAGE_KEYS.DRIVES, drives.data);
@@ -198,13 +198,13 @@ export const storageService = {
       n.id === notificationId ? { ...n, isRead: true } : n
     );
     save(STORAGE_KEYS.NOTIFICATIONS, notifs);
-    fetch(`/api/reports/notifications/${notificationId}/read`, { method: 'POST' }).catch(console.error);
+    apiClient.markNotificationRead(notificationId).catch(console.error);
     return notifs;
   },
   markAllAsRead() {
     const notifs = this.getNotifications().map(n => ({ ...n, isRead: true }));
     save(STORAGE_KEYS.NOTIFICATIONS, notifs);
-    fetch('/api/reports/notifications/read-all', { method: 'POST' }).catch(console.error);
+    apiClient.markAllNotificationsRead().catch(console.error);
     return notifs;
   },
 
