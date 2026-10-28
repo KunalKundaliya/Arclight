@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
@@ -9,18 +9,45 @@ import {
   Building2,
   ExternalLink,
   ShieldCheck,
-  CheckCircle2
+  CheckCircle2,
+  RefreshCw
 } from 'lucide-react';
 import PageHeader from '../../components/common/PageHeader';
 import FilterDropdown from '../../components/common/FilterDropdown';
 import StatusBadge from '../../components/common/StatusBadge';
 import Modal from '../../components/common/Modal';
 import { storageService } from '../../services/storageService';
+import { apiClient } from '../../services/apiClient';
 
 export default function MasterCalendarPage() {
-  const [interviews] = useState(() => storageService.getInterviews());
-  const [interviewers] = useState(() => storageService.getInterviewers());
-  const [rooms] = useState(() => storageService.getRooms());
+  const [interviews, setInterviews] = useState(() => storageService.getInterviews());
+  const [interviewers, setInterviewers] = useState(() => storageService.getInterviewers());
+  const [rooms, setRooms] = useState(() => storageService.getRooms());
+  const [isLoading, setIsLoading] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState(null);
+
+  // Live PostgreSQL sync on mount and manual trigger
+  const refreshLiveSchedule = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const [intRes, facRes, rmRes] = await Promise.all([
+        apiClient.getInterviews().catch(() => null),
+        apiClient.getInterviewers().catch(() => null),
+        apiClient.getRooms().catch(() => null)
+      ]);
+
+      if (intRes?.data) setInterviews(intRes.data);
+      if (facRes?.data) setInterviewers(facRes.data);
+      if (rmRes?.data) setRooms(rmRes.data);
+      setLastSyncTime(new Date());
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshLiveSchedule();
+  }, [refreshLiveSchedule]);
 
   // View state: 'month' | 'week' | 'day'
   const [viewMode, setViewMode] = useState('week');
@@ -81,6 +108,23 @@ export default function MasterCalendarPage() {
           { label: 'Coordinator', to: '/coordinator' },
           { label: 'Master Calendar' }
         ]}
+        actions={
+          <div className="flex items-center gap-2">
+            {lastSyncTime && (
+              <span className="text-[11px] font-mono text-slate-400 hidden sm:inline">
+                Synced at {lastSyncTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </span>
+            )}
+            <button
+              onClick={refreshLiveSchedule}
+              disabled={isLoading}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-2xs transition-all hover:border-slate-300"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-indigo-600 ${isLoading ? 'animate-spin' : ''}`} />
+              <span>{isLoading ? 'Syncing...' : 'Sync Live Schedule'}</span>
+            </button>
+          </div>
+        }
       />
 
       {/* Calendar Controls & Filter Bar */}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Calendar,
@@ -10,12 +10,15 @@ import {
   ChevronLeft,
   Sparkles,
   Info,
-  ShieldCheck
+  ShieldCheck,
+  RefreshCw
 } from 'lucide-react';
 import PageHeader from '../../components/common/PageHeader';
 import Modal from '../../components/common/Modal';
 import { storageService } from '../../services/storageService';
+import { apiClient } from '../../services/apiClient';
 import { useToast } from '../../context/ToastContext';
+import { generateAvailableSlotsForDate } from '../../utils/slotGenerator';
 
 export default function CandidateBookingPage() {
   const navigate = useNavigate();
@@ -25,6 +28,30 @@ export default function CandidateBookingPage() {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isBooked, setIsBooked] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Live state from PostgreSQL / storage
+  const [interviewers, setInterviewers] = useState(() => storageService.getInterviewers());
+  const [rooms, setRooms] = useState(() => storageService.getRooms());
+  const [interviews, setInterviews] = useState(() => storageService.getInterviews());
+
+  // Hydrate fresh availability from backend
+  useEffect(() => {
+    let mounted = true;
+    Promise.all([
+      apiClient.getInterviewers().catch(() => null),
+      apiClient.getRooms().catch(() => null),
+      apiClient.getInterviews().catch(() => null)
+    ]).then(([intRes, rmRes, intvRes]) => {
+      if (!mounted) return;
+      if (intRes?.data) setInterviewers(intRes.data);
+      if (rmRes?.data) setRooms(rmRes.data);
+      if (intvRes?.data) setInterviews(intvRes.data);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const availableDates = [
     { date: '2026-10-26', day: 'Mon', label: 'Oct 26' },
@@ -34,40 +61,33 @@ export default function CandidateBookingPage() {
     { date: '2026-10-30', day: 'Fri', label: 'Oct 30' },
   ];
 
-  // Demo generated available slots that respect interviewer availability
-  const demoSlotsByDate = {
-    '2026-10-26': [
-      { id: 'slot-1', startTime: '10:00', endTime: '11:00', duration: '60 min', interviewers: ['Dr. Evelyn Voss'], room: 'Virtual Cloud Chamber 1 (CodeCollab)', roundTitle: 'System Architecture & Fault Tolerance' },
-      { id: 'slot-2', startTime: '11:30', endTime: '12:30', duration: '60 min', interviewers: ['Aria Chen'], room: 'Virtual Cloud Chamber 2 (Zoom Enterprise)', roundTitle: 'System Architecture & Fault Tolerance' },
-      { id: 'slot-3', startTime: '14:00', endTime: '15:00', duration: '60 min', interviewers: ['Dr. Evelyn Voss', 'Devon Thorne'], room: 'Chamber Alpha (Hybrid Nexus)', roundTitle: 'System Architecture & Fault Tolerance' },
-      { id: 'slot-4', startTime: '16:00', endTime: '17:00', duration: '60 min', interviewers: ['Marcus Sterling'], room: 'Executive Boardroom 801', roundTitle: 'System Architecture & Fault Tolerance' },
-    ],
-    '2026-10-27': [
-      { id: 'slot-5', startTime: '13:00', endTime: '14:00', duration: '60 min', interviewers: ['Marcus Sterling'], room: 'Chamber Alpha (Hybrid Nexus)', roundTitle: 'System Architecture & Fault Tolerance' },
-      { id: 'slot-6', startTime: '15:00', endTime: '16:00', duration: '60 min', interviewers: ['Aria Chen'], room: 'Virtual Cloud Chamber 1', roundTitle: 'System Architecture & Fault Tolerance' },
-    ],
-    '2026-10-28': [
-      { id: 'slot-7', startTime: '10:00', endTime: '11:00', duration: '60 min', interviewers: ['Dr. Evelyn Voss'], room: 'Virtual Cloud Chamber 1', roundTitle: 'System Architecture & Fault Tolerance' },
-      { id: 'slot-8', startTime: '14:00', endTime: '15:00', duration: '60 min', interviewers: ['Devon Thorne'], room: 'Sanctum West Pod 04', roundTitle: 'System Architecture & Fault Tolerance' },
-      { id: 'slot-9', startTime: '16:00', endTime: '17:00', duration: '60 min', interviewers: ['Dr. Evelyn Voss'], room: 'Virtual Cloud Chamber 2', roundTitle: 'System Architecture & Fault Tolerance' },
-    ],
-    '2026-10-29': [
-      { id: 'slot-10', startTime: '13:00', endTime: '14:00', duration: '60 min', interviewers: ['Marcus Sterling'], room: 'Executive Boardroom 801', roundTitle: 'System Architecture & Fault Tolerance' },
-      { id: 'slot-11', startTime: '15:00', endTime: '16:00', duration: '60 min', interviewers: ['Maya Lin-Kowalski'], room: 'Virtual Cloud Chamber 1', roundTitle: 'System Architecture & Fault Tolerance' },
-    ],
-    '2026-10-30': [
-      { id: 'slot-12', startTime: '09:00', endTime: '10:00', duration: '60 min', interviewers: ['Dr. Evelyn Voss'], room: 'Virtual Cloud Chamber 1', roundTitle: 'System Architecture & Fault Tolerance' },
-      { id: 'slot-13', startTime: '11:00', endTime: '12:00', duration: '60 min', interviewers: ['Devon Thorne'], room: 'Chamber Alpha (Hybrid Nexus)', roundTitle: 'System Architecture & Fault Tolerance' },
-      { id: 'slot-14', startTime: '14:00', endTime: '15:00', duration: '60 min', interviewers: ['Dr. Evelyn Voss'], room: 'Virtual Cloud Chamber 2', roundTitle: 'System Architecture & Fault Tolerance' },
-    ]
+  // Dynamic slot computation for selected date
+  const currentSlots = useMemo(() => {
+    return generateAvailableSlotsForDate({
+      date: selectedDate,
+      interviewers,
+      rooms,
+      existingInterviews: interviews,
+      roundTitle: 'System Architecture & Fault Tolerance'
+    });
+  }, [selectedDate, interviewers, rooms, interviews]);
+
+  // Dynamic slot count for date pills
+  const getSlotCountForDate = (date) => {
+    return generateAvailableSlotsForDate({
+      date,
+      interviewers,
+      rooms,
+      existingInterviews: interviews,
+      roundTitle: 'System Architecture & Fault Tolerance'
+    }).length;
   };
 
-  const currentSlots = demoSlotsByDate[selectedDate] || [];
-
-  const handleConfirmBooking = () => {
+  const handleConfirmBooking = async () => {
     if (!selectedSlot) return;
+    setIsSubmitting(true);
 
-    // Create new interview entry in storage
+    // Create new interview entry
     const newInterview = {
       id: `intv-selfbook-${Date.now()}`,
       candidateId: 'cand-01',
@@ -76,8 +96,8 @@ export default function CandidateBookingPage() {
       candidateRole: 'Senior Distributed Systems Engineer',
       driveId: 'drv-101',
       interviewerNames: selectedSlot.interviewers,
-      interviewerIds: ['int-01'],
-      roomId: 'room-03',
+      interviewerIds: selectedSlot.interviewerIds || ['int-01'],
+      roomId: selectedSlot.roomId || 'room-03',
       roomName: selectedSlot.room,
       roundType: 'Technical',
       roundTitle: selectedSlot.roundTitle,
@@ -91,11 +111,19 @@ export default function CandidateBookingPage() {
       notes: 'Candidate self-booked slot via intelligent scheduling portal.'
     };
 
-    storageService.saveInterview(newInterview);
+    try {
+      storageService.saveInterview(newInterview);
+      await apiClient.createInterview(newInterview).catch((err) => {
+        console.warn('Backend interview booking sync warning:', err.message);
+      });
 
-    setIsConfirmModalOpen(false);
-    setIsBooked(true);
-    showToast('Interview confirmed! Calendar invite and sandbox link generated.', 'success', 'Booking Confirmed');
+      setInterviews((prev) => [...prev, newInterview]);
+      setIsConfirmModalOpen(false);
+      setIsBooked(true);
+      showToast('Interview confirmed! Calendar invite and sandbox link generated.', 'success', 'Booking Confirmed');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -193,7 +221,7 @@ export default function CandidateBookingPage() {
                   </div>
                   <div className="text-base font-extrabold mt-0.5">{item.label}</div>
                   <div className={`text-[10px] mt-1 font-mono ${selectedDate === item.date ? 'text-indigo-200' : 'text-emerald-600 font-semibold'}`}>
-                    {demoSlotsByDate[item.date]?.length || 0} Slots
+                    {getSlotCountForDate(item.date)} Slots
                   </div>
                 </button>
               ))}
@@ -210,7 +238,12 @@ export default function CandidateBookingPage() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {currentSlots.map((slot) => {
+              {currentSlots.length === 0 ? (
+                <div className="col-span-full p-8 text-center bg-slate-50 border border-dashed border-slate-200 rounded-xl text-slate-500 text-xs">
+                  No open slots currently available on this date that satisfy interviewer availability and room constraints. Please select another date above.
+                </div>
+              ) : (
+                currentSlots.map((slot) => {
                 const isSelected = selectedSlot?.id === slot.id;
                 return (
                   <div
@@ -246,9 +279,10 @@ export default function CandidateBookingPage() {
                         <span className="truncate">{slot.room}</span>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                    </div>
+                  );
+                })
+              )}
             </div>
 
             {/* Bottom confirmation action */}
