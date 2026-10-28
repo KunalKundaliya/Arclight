@@ -17,21 +17,37 @@ import PageHeader from '../../components/common/PageHeader';
 import StatusBadge from '../../components/common/StatusBadge';
 import { storageService } from '../../services/storageService';
 import { useAuth } from '../../context/AuthContext';
+import { useRealtime } from '../../context/RealtimeContext';
 
 export default function CandidateDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { isConnected, lastEvent, lastUpdated } = useRealtime();
 
-  const [candidates] = useState(() => storageService.getCandidates());
-  const [interviews] = useState(() => storageService.getInterviews());
+  const [candidates, setCandidates] = useState(() => storageService.getCandidates());
+  const [interviews, setInterviews] = useState(() => storageService.getInterviews());
 
-  // Soren Vance (cand-01)
-  const candidate = candidates.find(c => c.id === 'cand-01') || candidates[0];
+  // Re-hydrate candidate sessions whenever SSE event updates local storage
+  React.useEffect(() => {
+    setCandidates(storageService.getCandidates());
+    setInterviews(storageService.getInterviews());
+  }, [lastUpdated]);
+
+  // Soren Vance (cand-01) or currently logged in candidate
+  const candidate = candidates.find(c => c.id === 'cand-01') || candidates[0] || { name: 'Soren Vance', id: 'cand-01' };
   const myInterviews = interviews.filter(i =>
-    i.candidateId === candidate.id || i.candidateName.toLowerCase().includes('soren')
+    i.candidateId === candidate.id ||
+    (candidate.name && i.candidateName?.toLowerCase().includes(candidate.name.toLowerCase())) ||
+    i.candidateName?.toLowerCase().includes('soren')
   );
 
-  const nextInterview = myInterviews[0] || {
+  const sortedInterviews = [...myInterviews].sort((a, b) => {
+    const da = `${a.date || ''} ${a.startTime || ''}`;
+    const db = `${b.date || ''} ${b.startTime || ''}`;
+    return da.localeCompare(db);
+  });
+
+  const nextInterview = sortedInterviews[0] || {
     id: 'intv-201',
     roundTitle: 'System Architecture & Fault Tolerance',
     date: '2026-10-22',
@@ -46,7 +62,11 @@ export default function CandidateDashboard() {
 
   const stages = [
     { name: '1. Coding Challenge', status: 'Completed', score: 94 },
-    { name: '2. System Architecture', status: 'Active (Scheduled)', score: 'In Progress' },
+    {
+      name: '2. System Architecture',
+      status: myInterviews.length > 0 ? 'Active (Scheduled)' : 'Pending Booking',
+      score: myInterviews.length > 0 ? `${myInterviews[0].date} @ ${myInterviews[0].startTime}` : 'Ready to Book'
+    },
     { name: '3. Leadership & Culture', status: 'Upcoming', score: 'Pending' },
   ];
 
@@ -56,13 +76,19 @@ export default function CandidateDashboard() {
         title="Candidate Trial Portal"
         subtitle={`Welcome, ${candidate.name}. You are advancing through the Fall 2026 Engineering Crucible.`}
         actions={
-          <Link
-            to="/candidate/book/round-101"
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg shadow-sm shadow-indigo-600/30 transition-all hover:scale-[1.02]"
-          >
-            <CalendarCheck className="w-3.5 h-3.5" />
-            <span>Self-Book Next Slot</span>
-          </Link>
+          <div className="flex items-center gap-2.5">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+              {isConnected ? 'Real-Time Telemetry' : 'Reconnecting...'}
+            </span>
+            <Link
+              to="/candidate/book/round-101"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg shadow-sm shadow-indigo-600/30 transition-all hover:scale-[1.02]"
+            >
+              <CalendarCheck className="w-3.5 h-3.5" />
+              <span>Self-Book Next Slot</span>
+            </Link>
+          </div>
         }
       />
 

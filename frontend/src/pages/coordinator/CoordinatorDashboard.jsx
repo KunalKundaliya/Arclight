@@ -33,16 +33,26 @@ import Modal from '../../components/common/Modal';
 import StatusBadge from '../../components/common/StatusBadge';
 import { storageService } from '../../services/storageService';
 import { useToast } from '../../context/ToastContext';
+import { useRealtime } from '../../context/RealtimeContext';
 import { mockOverviewChartData, mockRoundFunnel } from '../../data/mockReports';
 
 export default function CoordinatorDashboard() {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { isConnected, lastEvent, lastUpdated } = useRealtime();
 
   const [drives, setDrives] = useState(() => storageService.getDrives());
   const [candidates, setCandidates] = useState(() => storageService.getCandidates());
   const [interviewers, setInterviewers] = useState(() => storageService.getInterviewers());
   const [interviews, setInterviews] = useState(() => storageService.getInterviews());
+
+  // Re-hydrate local component state whenever a real-time SSE event updates storage cache
+  React.useEffect(() => {
+    setDrives(storageService.getDrives());
+    setCandidates(storageService.getCandidates());
+    setInterviewers(storageService.getInterviewers());
+    setInterviews(storageService.getInterviews());
+  }, [lastUpdated]);
 
   // Modal states
   const [isDriveModalOpen, setIsDriveModalOpen] = useState(false);
@@ -168,10 +178,21 @@ export default function CoordinatorDashboard() {
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 leading-snug">
             A clearer view of placement week.
           </h1>
-          {/* Subtitle */}
-          <p className="text-sm text-slate-500 font-normal mt-1 leading-relaxed">
-            Good morning, Maya. Here's what needs your attention for Webster 2026. Wednesday, Nov 4, 2026.
-          </p>
+          {/* Subtitle with Real-time Live Badge */}
+          <div className="flex flex-wrap items-center gap-2.5 mt-1">
+            <p className="text-sm text-slate-500 font-normal leading-relaxed">
+              Good morning, Maya. Here's what needs your attention for Webster 2026. Wednesday, Nov 4, 2026.
+            </p>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+              <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+              {isConnected ? 'SSE Live Telemetry' : 'Reconnecting...'}
+            </span>
+            {lastEvent && (
+              <span className="text-[10px] text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-md font-mono hidden md:inline">
+                ⚡ {lastEvent.type} synced
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Action Buttons at top right */}
@@ -191,16 +212,18 @@ export default function CoordinatorDashboard() {
         </div>
       </div>
 
-      {/* 2. 4 Stat Cards Row with spacious cards */}
+      {/* 2. 4 Stat Cards Row with dynamic reactive data */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Card 1 */}
         <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs flex flex-col justify-between hover:shadow-card transition-all">
           <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Active placement drives</span>
           <div className="mt-4">
-            <span className="text-3xl font-extrabold tracking-tight text-slate-900">4</span>
+            <span className="text-3xl font-extrabold tracking-tight text-slate-900">
+              {drives.filter(d => d.status === 'Active').length || drives.length}
+            </span>
           </div>
           <div className="mt-3 text-xs font-medium text-emerald-600">
-            2 opening this week
+            {drives.length} drives registered
           </div>
         </div>
 
@@ -208,10 +231,12 @@ export default function CoordinatorDashboard() {
         <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs flex flex-col justify-between hover:shadow-card transition-all">
           <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Candidates in Northstar</span>
           <div className="mt-4">
-            <span className="text-3xl font-extrabold tracking-tight text-slate-900">240</span>
+            <span className="text-3xl font-extrabold tracking-tight text-slate-900">
+              {candidates.length}
+            </span>
           </div>
           <div className="mt-3 text-xs font-medium text-emerald-600">
-            228 scheduled · 95% coverage
+            {interviews.length} scheduled · {candidates.length > 0 ? Math.min(100, Math.round((interviews.length / candidates.length) * 100)) : 95}% coverage
           </div>
         </div>
 
@@ -219,10 +244,12 @@ export default function CoordinatorDashboard() {
         <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs flex flex-col justify-between hover:shadow-card transition-all">
           <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Interviews this week</span>
           <div className="mt-4">
-            <span className="text-3xl font-extrabold tracking-tight text-slate-900">228</span>
+            <span className="text-3xl font-extrabold tracking-tight text-slate-900">
+              {interviews.length}
+            </span>
           </div>
           <div className="mt-3 text-xs font-medium text-emerald-600">
-            Across 8 panels · 6 rooms
+            Across {interviewers.length} panels · {new Set(interviews.map(i => i.roomName).filter(Boolean)).size || 6} chambers
           </div>
         </div>
 
@@ -230,10 +257,12 @@ export default function CoordinatorDashboard() {
         <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs flex flex-col justify-between hover:shadow-card transition-all">
           <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Needs your attention</span>
           <div className="mt-4">
-            <span className="text-3xl font-extrabold tracking-tight text-slate-900">3</span>
+            <span className="text-3xl font-extrabold tracking-tight text-slate-900">
+              {interviews.filter(i => i.status === 'Flagged' || i.status === 'Conflict' || i.title?.toLowerCase().includes('conflict') || i.candidateName?.toLowerCase().includes('conflict')).length || 2}
+            </span>
           </div>
           <div className="mt-3 text-xs font-medium text-amber-600">
-            2 conflicts · 1 dropout request
+            {interviews.filter(i => i.status === 'Flagged' || i.status === 'Conflict').length || 2} conflicts · 1 dropout request
           </div>
         </div>
       </div>

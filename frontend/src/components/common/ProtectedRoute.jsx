@@ -17,9 +17,9 @@ export default function ProtectedRoute({ allowedRoles, children }) {
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(currentRole)) {
+  // Allow coordinators (admin) to access any workspace for testing/supervision
+  if (allowedRoles && !allowedRoles.includes(currentRole) && currentRole !== 'coordinator') {
     // If unauthorized for this section, redirect to their own portal
-    if (currentRole === 'coordinator') return <Navigate to="/coordinator" replace />;
     if (currentRole === 'interviewer') return <Navigate to="/interviewer" replace />;
     if (currentRole === 'candidate') return <Navigate to="/candidate" replace />;
     return <Navigate to="/" replace />;

@@ -91,6 +91,7 @@ export default function App() {
               }
             >
               <Route index element={<CoordinatorDashboard />} />
+              <Route path="dashboard" element={<CoordinatorDashboard />} />
               <Route path="drives" element={<RecruitmentDrivesPage />} />
               <Route path="candidates" element={<CandidatesPage />} />
               <Route path="interviewers" element={<InterviewersPage />} />
@@ -108,12 +109,13 @@ export default function App() {
             <Route
               path="/interviewer"
               element={
-                <ProtectedRoute allowedRoles={['interviewer']}>
+                <ProtectedRoute allowedRoles={['interviewer', 'coordinator']}>
                   <InterviewerLayout />
                 </ProtectedRoute>
               }
             >
               <Route index element={<InterviewerDashboard />} />
+              <Route path="dashboard" element={<InterviewerDashboard />} />
               <Route path="calendar" element={<InterviewerCalendarPage />} />
               <Route path="availability" element={<InterviewerAvailabilityPage />} />
               <Route path="interviews/:id" element={<InterviewDetailPage />} />
@@ -126,12 +128,13 @@ export default function App() {
             <Route
               path="/candidate"
               element={
-                <ProtectedRoute allowedRoles={['candidate']}>
+                <ProtectedRoute allowedRoles={['candidate', 'coordinator']}>
                   <CandidateLayout />
                 </ProtectedRoute>
               }
             >
               <Route index element={<CandidateDashboard />} />
+              <Route path="dashboard" element={<CandidateDashboard />} />
               <Route path="interviews" element={<CandidateInterviewsPage />} />
               <Route path="book/:roundId" element={<CandidateBookingPage />} />
               <Route path="interviews/:id" element={<CandidateInterviewDetailPage />} />
