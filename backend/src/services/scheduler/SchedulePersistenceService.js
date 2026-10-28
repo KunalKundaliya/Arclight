@@ -293,13 +293,26 @@ export class SchedulePersistenceService {
     const {
       replaceExistingForDrive = false,
       skipConcurrencyCheck = false,
-      notify = true
+      notify = true,
+      context = {}
     } = options;
 
     const dbPool = poolOverride || pool;
 
+    // Resolve resource context only if assignments specify required skills and context was not provided
+    let contextToUse = context;
+    const hasRequiredSkills = assignments.some(a => a.requiredSkills && a.requiredSkills.length > 0);
+    if (hasRequiredSkills && !contextToUse.interviewers) {
+      try {
+        const intRes = await dbPool.query('SELECT id, name, skills FROM interviewers');
+        contextToUse = { ...contextToUse, interviewers: intRes.rows || [] };
+      } catch {
+        // Fallback gracefully
+      }
+    }
+
     // 1. Stage 3 Internal Batch Hard-Constraint Verification
-    const assignmentResults = validateScheduleBatch(assignments);
+    const assignmentResults = validateScheduleBatch(assignments, contextToUse);
     const unaryViolations = Array.isArray(assignmentResults)
       ? assignmentResults.flatMap(r => r.violations || [])
       : [];

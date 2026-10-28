@@ -190,5 +190,66 @@ export const schedulerService = {
     });
 
     return foundConflicts;
+  },
+
+  /**
+   * Stage 7: Safely commits an applied schedule transaction to PostgreSQL
+   */
+  async applySchedule({ driveId, assignments, options = {} }) {
+    try {
+      const response = await apiClient.applyScheduler({ driveId, assignments, options });
+      return response;
+    } catch (err) {
+      console.warn('[SchedulerService] Failed to apply schedule to backend:', err.message);
+      throw err;
+    }
+  },
+
+  /**
+   * Stage 7: Transactionally rolls back an applied schedule batch for a drive
+   */
+  async rollbackSchedule({ driveId, interviewIds, reason, hardDelete = false }) {
+    try {
+      const response = await apiClient.rollbackScheduler({ driveId, interviewIds, reason, hardDelete });
+      return response;
+    } catch (err) {
+      console.warn('[SchedulerService] Failed to rollback schedule on backend:', err.message);
+      throw err;
+    }
+  },
+
+  /**
+   * Stage 7: Retrieves real-time scheduling status & fulfillment metrics
+   */
+  async getStatus(driveId) {
+    try {
+      const response = await apiClient.getSchedulerStatus(driveId);
+      return response.data;
+    } catch (err) {
+      console.warn('[SchedulerService] Failed to get schedule status:', err.message);
+      return null;
+    }
+  },
+
+  /**
+   * Stage 8: Faculty Emergency Call-Out Repair (substitute assessor or slot shift)
+   */
+  async rescheduleFacultyCallout(data) {
+    return apiClient.rescheduleFacultyCallout(data);
+  },
+
+  /**
+   * Stage 8: Chamber Emergency Outage Repair (chamber migration)
+   */
+  async rescheduleRoomOutage(data) {
+    return apiClient.rescheduleRoomOutage(data);
+  },
+
+  /**
+   * Stage 8: Candidate Self-Rescheduling (keeping other bookings locked)
+   */
+  async rescheduleCandidate(data) {
+    return apiClient.rescheduleCandidate(data);
   }
 };
+

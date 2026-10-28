@@ -120,6 +120,47 @@ export const apiClient = {
     });
   },
 
+  // Stage 7: Persistence & Safe Transactions
+  applyScheduler(data) {
+    return request('/scheduler/apply', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  rollbackScheduler(data) {
+    return request('/scheduler/rollback', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  getSchedulerStatus(driveId) {
+    return request(`/scheduler/status/${driveId}`);
+  },
+
+  // Stage 8: Dynamic Rescheduling
+  rescheduleFacultyCallout(data) {
+    return request('/scheduler/reschedule/faculty-callout', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  rescheduleRoomOutage(data) {
+    return request('/scheduler/reschedule/room-outage', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  rescheduleCandidate(data) {
+    return request('/scheduler/reschedule/candidate', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
   // Evaluations
   getEvaluations() {
     return request('/evaluations');

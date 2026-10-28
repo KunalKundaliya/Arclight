@@ -354,6 +354,7 @@ export class DynamicRepairEngine {
       actions: repairedActions,
       unresolved,
       repairedSchedule: workingSchedule,
+      schedule: workingSchedule,
       validation: {
         isValid,
         totalViolations: validationResults.reduce((sum, r) => sum + r.violations.length, 0)
@@ -491,6 +492,7 @@ export class DynamicRepairEngine {
       actions: repairedActions,
       unresolved,
       repairedSchedule: workingSchedule,
+      schedule: workingSchedule,
       validation: {
         isValid,
         totalViolations: validationResults.reduce((sum, r) => sum + r.violations.length, 0)
@@ -687,6 +689,7 @@ export class DynamicRepairEngine {
       }],
       unresolved: [],
       repairedSchedule: workingSchedule,
+      schedule: workingSchedule,
       validation: {
         isValid,
         totalViolations: validationResults.reduce((sum, r) => sum + r.violations.length, 0)
@@ -694,4 +697,33 @@ export class DynamicRepairEngine {
       executionTimeMs: Date.now() - startExecution
     };
   }
+
+  /**
+   * Alias wrapper for Faculty Call-Out / Assessor Absence Repair
+   */
+  static repairFacultyCallOut(params = {}) {
+    const startTime = params.startTime || params.timeRange?.startTime;
+    const endTime = params.endTime || params.timeRange?.endTime;
+    const result = this.handleInterviewerCallout({
+      ...params,
+      interviewerId: params.unavailableInterviewerId || params.interviewerId,
+      startTime,
+      endTime
+    });
+    result.schedule = result.repairedSchedule;
+    return result;
+  }
+
+  /**
+   * Alias wrapper for Chamber Outage / Emergency Maintenance Migration
+   */
+  static repairChamberOutage(params = {}) {
+    const result = this.handleRoomOutage({
+      ...params,
+      roomId: params.offlineRoomId || params.roomId
+    });
+    result.schedule = result.repairedSchedule;
+    return result;
+  }
 }
+
