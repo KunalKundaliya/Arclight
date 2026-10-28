@@ -17,3 +17,4 @@ export * from './CspSolver.js';
 export * from './SoftConstraintEvaluator.js';
 export * from './ScheduleOptimizer.js';
 export * from './DynamicRepairEngine.js';
+export * from './SchedulePersistenceService.js';

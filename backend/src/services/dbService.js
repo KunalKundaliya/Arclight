@@ -1,4 +1,5 @@
 import { pool } from '../config/db.js';
+import { SchedulePersistenceService } from './scheduler/SchedulePersistenceService.js';
 import {
   mockOverviewChartData,
   mockInterviewerUtilization,
@@ -306,6 +307,19 @@ class DbService {
   async deleteInterview(id) {
     const res = await pool.query('DELETE FROM interviews WHERE id = $1', [id]);
     return res.rowCount > 0;
+  }
+
+  // --- STAGE 7 SCHEDULE TRANSACTIONS ---
+  async applyScheduleTransaction(driveId, assignments, options = {}) {
+    return SchedulePersistenceService.applyScheduleTransaction({ driveId, assignments, options });
+  }
+
+  async rollbackSchedule(driveId, options = {}) {
+    return SchedulePersistenceService.rollbackSchedule({ driveId, ...options });
+  }
+
+  async getScheduleStatus(driveId) {
+    return SchedulePersistenceService.getScheduleStatus({ driveId });
   }
 
   // --- EVALUATIONS ---
