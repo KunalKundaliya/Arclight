@@ -13,6 +13,20 @@ router.get('/', async (req, res) => {
   }
 });
 
+// POST /api/notifications - Create a new notification
+router.post('/', async (req, res) => {
+  try {
+    const { title, description, type } = req.body;
+    if (!title) {
+      return res.status(400).json({ success: false, message: 'Notification title is required' });
+    }
+    const created = await dbService.createNotification(req.body);
+    res.status(201).json({ success: true, data: created });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // PUT /api/notifications/:id/read - Mark specific notification as read
 router.put('/:id/read', async (req, res) => {
   try {

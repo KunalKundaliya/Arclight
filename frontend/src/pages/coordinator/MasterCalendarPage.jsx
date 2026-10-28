@@ -18,6 +18,7 @@ import StatusBadge from '../../components/common/StatusBadge';
 import Modal from '../../components/common/Modal';
 import { storageService } from '../../services/storageService';
 import { apiClient } from '../../services/apiClient';
+import CalendarExportButtons from '../../components/common/CalendarExportButtons';
 
 export default function MasterCalendarPage() {
   const [interviews, setInterviews] = useState(() => storageService.getInterviews());
@@ -420,6 +421,14 @@ export default function MasterCalendarPage() {
                 </a>
               </div>
             )}
+
+            <div className="p-3 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-between">
+              <div>
+                <span className="font-bold text-slate-800 block text-xs">Calendar Synchronization</span>
+                <span className="text-[11px] text-slate-500">Add this session to personal or enterprise calendars</span>
+              </div>
+              <CalendarExportButtons interview={selectedEvent} />
+            </div>
 
             {selectedEvent.notes && (
               <div className="p-3 rounded-lg bg-slate-50 border border-slate-100">

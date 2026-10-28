@@ -173,6 +173,9 @@ export const apiClient = {
   getNotifications() {
     return request('/notifications');
   },
+  createNotification(data) {
+    return request('/notifications', { method: 'POST', body: JSON.stringify(data) });
+  },
   markNotificationRead(id) {
     return request(`/notifications/${id}/read`, { method: 'PUT' });
   },

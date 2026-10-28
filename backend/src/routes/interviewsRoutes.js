@@ -36,6 +36,14 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Candidate name, date and start time are required' });
     }
     const created = await dbService.createInterview(req.body);
+
+    // Automated Notification Trigger 1: Candidate booking / session created
+    await dbService.createNotification({
+      title: 'Candidate Trial Slot Confirmed',
+      description: `${created.candidateName} scheduled for ${created.roundTitle || 'Technical Screen'} on ${created.date} at ${created.startTime}.`,
+      type: 'success'
+    }).catch(console.error);
+
     res.status(201).json({ success: true, data: created });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

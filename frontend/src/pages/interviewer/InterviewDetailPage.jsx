@@ -15,6 +15,7 @@ import {
 import PageHeader from '../../components/common/PageHeader';
 import StatusBadge from '../../components/common/StatusBadge';
 import { storageService } from '../../services/storageService';
+import CalendarExportButtons from '../../components/common/CalendarExportButtons';
 
 export default function InterviewDetailPage() {
   const { id } = useParams();
@@ -33,13 +34,16 @@ export default function InterviewDetailPage() {
         title={`Interview Session: ${session.candidateName}`}
         subtitle={`${session.roundTitle} • Scheduled for ${session.date} (${session.startTime} - ${session.endTime})`}
         actions={
-          <Link
-            to="/interviewer/evaluations/eval-303"
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg shadow-sm shadow-indigo-600/30 transition-all hover:scale-[1.02]"
-          >
-            <span>Open Rubric Scorecard</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
+          <div className="flex items-center gap-2">
+            <CalendarExportButtons interview={session} />
+            <Link
+              to="/interviewer/evaluations/eval-303"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg shadow-sm shadow-indigo-600/30 transition-all hover:scale-[1.02]"
+            >
+              <span>Open Rubric Scorecard</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
         }
       />
 

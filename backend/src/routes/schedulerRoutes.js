@@ -278,6 +278,15 @@ router.post('/reschedule/faculty-callout', async (req, res) => {
       });
     }
 
+    if (repairResult.success) {
+      const interviewerName = interviewers.find(i => i.id === unavailableInterviewerId)?.name || unavailableInterviewerId;
+      await dbService.createNotification({
+        title: 'Emergency Faculty Callout Repaired',
+        description: `Automated repair executed for ${interviewerName} on ${date}. ${repairResult.displacedAssignments?.length || 0} sessions reassigned with zero hard-constraint violations.`,
+        type: 'warning'
+      }).catch(console.error);
+    }
+
     res.json({
       success: repairResult.success,
       data: {

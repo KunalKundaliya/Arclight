@@ -19,6 +19,7 @@ import { storageService } from '../../services/storageService';
 import { apiClient } from '../../services/apiClient';
 import { useToast } from '../../context/ToastContext';
 import { generateAvailableSlotsForDate } from '../../utils/slotGenerator';
+import CalendarExportButtons from '../../components/common/CalendarExportButtons';
 
 export default function CandidateBookingPage() {
   const navigate = useNavigate();
@@ -176,6 +177,16 @@ export default function CandidateBookingPage() {
               <span className="text-slate-400">Chamber:</span>
               <span className="font-bold text-slate-800">{selectedSlot?.room}</span>
             </div>
+          </div>
+
+          <div className="pt-2 flex justify-center">
+            <CalendarExportButtons
+              interview={{
+                ...selectedSlot,
+                date: selectedDate,
+                candidateName: 'Soren Vance'
+              }}
+            />
           </div>
 
           <div className="pt-2 flex items-center justify-center gap-3">

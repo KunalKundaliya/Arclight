@@ -25,6 +25,14 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const saved = await dbService.saveEvaluation(req.body);
+
+    // Automated Notification Trigger 3: Evaluation Scorecard Submitted
+    await dbService.createNotification({
+      title: 'Interview Evaluation Submitted',
+      description: `${saved.interviewerName || 'Faculty'} submitted evaluation for ${saved.candidateName} (${saved.recommendation || 'Evaluated'}, score: ${saved.totalScore}/100).`,
+      type: 'info'
+    }).catch(console.error);
+
     res.status(201).json({ success: true, data: saved });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

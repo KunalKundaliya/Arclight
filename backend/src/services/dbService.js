@@ -394,6 +394,24 @@ class DbService {
     return toCamel(res.rows);
   }
 
+  async createNotification(data) {
+    const id = data.id || `notif-${Date.now()}`;
+    const res = await pool.query(
+      `INSERT INTO notifications (id, title, description, time, type, read)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [
+        id,
+        data.title,
+        data.description || '',
+        data.time || 'Just now',
+        data.type || 'info',
+        data.read || false
+      ]
+    );
+    return toCamel(res.rows[0]);
+  }
+
   async markNotificationRead(id) {
     const res = await pool.query('UPDATE notifications SET read = true WHERE id = $1 RETURNING *', [id]);
     return toCamel(res.rows[0]);
