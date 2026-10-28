@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Bell,
   CheckCheck,
@@ -8,17 +8,111 @@ import {
   ClipboardCheck,
   Info,
   ExternalLink,
-  ShieldAlert
+  ShieldAlert,
+  RefreshCw
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PageHeader from '../../components/common/PageHeader';
 import { storageService } from '../../services/storageService';
+import { apiClient } from '../../services/apiClient';
 import { useToast } from '../../context/ToastContext';
+import { useRealtime } from '../../context/RealtimeContext';
 
 export default function NotificationsPage() {
   const { showToast } = useToast();
+  const { isConnected, lastEvent, lastUpdated } = useRealtime();
+
   const [notifications, setNotifications] = useState(() => storageService.getNotifications());
   const [filter, setFilter] = useState('all');
+  const [isLoading, setIsLoading] = useState(false);
+
+  // 1. Fetch fresh notification feed directly from PostgreSQL
+  const fetchNotifications = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const res = await apiClient.getNotifications();
+      if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+        setNotifications(res.data);
+      }
+    } catch (err) {
+      console.warn('Could not fetch live notifications, using local cache:', err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
+  // 2. Prepend live notifications whenever an SSE event fires
+  useEffect(() => {
+    if (!lastEvent) return;
+
+    const nowIso = new Date().toISOString().replace('T', ' ').substring(0, 16);
+
+    const mapEventToNotification = (evt) => {
+      switch (evt.type) {
+        case 'INTERVIEW_BOOKED':
+          return {
+            id: `notif-live-${Date.now()}`,
+            title: 'Candidate Self-Booked Slot',
+            message: `${evt.payload?.candidateName || 'Candidate'} confirmed slot on ${evt.payload?.date} at ${evt.payload?.startTime}.`,
+            type: 'booking',
+            timestamp: 'Just now',
+            date: nowIso,
+            isRead: false,
+            link: '/coordinator/calendar'
+          };
+
+        case 'SCHEDULE_APPLIED':
+          return {
+            id: `notif-live-${Date.now()}`,
+            title: 'Placement Drive Schedule Applied',
+            message: `Applied schedule with ${evt.payload?.count || 0} sessions synced with zero conflicts.`,
+            type: 'schedule',
+            timestamp: 'Just now',
+            date: nowIso,
+            isRead: false,
+            link: '/coordinator/scheduler'
+          };
+
+        case 'SCHEDULE_REPAIRED':
+          return {
+            id: `notif-live-${Date.now()}`,
+            title: evt.payload?.type === 'ROOM_OUTAGE' ? 'Chamber Outage Repaired' : 'Faculty Callout Repaired',
+            message: `Minimal-displacement repair completed: ${evt.payload?.displacedCount || 0} sessions migrated safely.`,
+            type: 'conflict',
+            timestamp: 'Just now',
+            date: nowIso,
+            isRead: false,
+            link: '/coordinator/scheduler'
+          };
+
+        case 'EVALUATION_SUBMITTED':
+          return {
+            id: `notif-live-${Date.now()}`,
+            title: 'Evaluation Scorecard Submitted',
+            message: `Evaluation submitted for ${evt.payload?.candidateName} (${evt.payload?.recommendation || 'Evaluated'}, score: ${evt.payload?.score}/100).`,
+            type: 'evaluation',
+            timestamp: 'Just now',
+            date: nowIso,
+            isRead: false,
+            link: '/coordinator/evaluations'
+          };
+
+        default:
+          return null;
+      }
+    };
+
+    const newNotification = mapEventToNotification(lastEvent);
+    if (newNotification) {
+      setNotifications(prev => [newNotification, ...prev]);
+    } else {
+      fetchNotifications();
+    }
+  }, [lastEvent, fetchNotifications]);
 
   const handleMarkAsRead = (id) => {
     const updated = storageService.markAsRead(id);
@@ -63,13 +157,29 @@ export default function NotificationsPage() {
           { label: 'Notifications' }
         ]}
         actions={
-          <button
-            onClick={handleMarkAllRead}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200/90 rounded-lg hover:bg-slate-50 transition-colors shadow-xs"
-          >
-            <CheckCheck className="w-4 h-4 text-indigo-600" />
-            <span>Mark All as Read</span>
-          </button>
+          <div className="flex items-center gap-2.5">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+              {isConnected ? 'SSE Live Feed' : 'Reconnecting...'}
+            </span>
+
+            <button
+              onClick={fetchNotifications}
+              disabled={isLoading}
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200/90 rounded-lg hover:bg-slate-50 transition-colors shadow-xs hover:border-slate-300"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-indigo-600 ${isLoading ? 'animate-spin' : ''}`} />
+              <span>{isLoading ? 'Syncing...' : 'Refresh'}</span>
+            </button>
+
+            <button
+              onClick={handleMarkAllRead}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200/90 rounded-lg hover:bg-slate-50 transition-colors shadow-xs"
+            >
+              <CheckCheck className="w-4 h-4 text-indigo-600" />
+              <span>Mark All as Read</span>
+            </button>
+          </div>
         }
       />
 
