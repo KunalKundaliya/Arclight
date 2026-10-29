@@ -48,26 +48,26 @@ export default function CandidateInterviewDetailPage() {
           </div>
 
           <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
-            <span className="text-[10px] text-slate-400 uppercase font-semibold block">Chamber Location</span>
+            <span className="text-[10px] text-slate-400 uppercase font-semibold block">Room Location</span>
             <div className="font-bold text-slate-800 text-base mt-1">{session.roomName}</div>
             <div className="text-slate-500 mt-0.5">Automated AI Code Sandbox Active</div>
           </div>
         </div>
 
-        {/* Chamber link */}
+        {/* Meeting room link */}
         <div className="p-5 rounded-2xl bg-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h4 className="text-base font-bold text-white">Live Virtual Chamber Access</h4>
+            <h4 className="text-base font-bold text-white">Live Virtual Meeting Room</h4>
             <p className="text-xs text-slate-400 mt-1">Please test audio and screen-sharing prior to session start</p>
           </div>
           <a
-            href={session.meetingUrl || 'https://meet.arclight.io/trial-crucible-201'}
+            href={session.meetingUrl || 'https://meet.arclight.io/apex-interview-201'}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-500 hover:bg-indigo-400 text-white text-xs font-semibold rounded-xl shadow-xs"
           >
             <Video className="w-4 h-4" />
-            <span>Launch Virtual Chamber</span>
+            <span>Join Interview Meeting</span>
             <ExternalLink className="w-3.5 h-3.5" />
           </a>
         </div>

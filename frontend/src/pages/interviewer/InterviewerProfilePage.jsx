@@ -58,7 +58,7 @@ export default function InterviewerProfilePage() {
           <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
             <span className="text-[10px] text-slate-400 uppercase font-semibold block">Total Assigned Sessions</span>
             <div className="font-bold text-indigo-600 text-base mt-1">{profile.assignedInterviews} Sessions</div>
-            <div className="text-slate-500 mt-1">Across Q4 Engineering Crucible</div>
+            <div className="text-slate-500 mt-1">Across Fall 2026 Apex Placement Drive</div>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">

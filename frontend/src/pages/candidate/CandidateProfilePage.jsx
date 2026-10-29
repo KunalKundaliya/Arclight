@@ -48,8 +48,8 @@ export default function CandidateProfilePage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
           <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
             <span className="text-[10px] text-slate-400 uppercase font-semibold block">Target Recruitment Drive</span>
-            <div className="font-bold text-slate-900 text-sm mt-1">Fall 2026 Engineering Crucible</div>
-            <div className="text-slate-500 mt-1">Nexus Quantum Laboratories • Distributed Systems Track</div>
+            <div className="font-bold text-slate-900 text-sm mt-1">Apex Dynamics · Fall 2026</div>
+            <div className="text-slate-500 mt-1">Apex Dynamics • Distributed Systems Track</div>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">

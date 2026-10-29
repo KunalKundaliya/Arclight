@@ -14,8 +14,8 @@ export default function CandidateInterviewsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="My Trial Interviews"
-        subtitle="Historical and upcoming interview rounds for the Fall 2026 Engineering Crucible"
+        title="My Interviews"
+        subtitle="Historical and upcoming interview rounds for the Fall 2026 Apex Placement Drive"
         breadcrumbs={[
           { label: 'Candidate', to: '/candidate' },
           { label: 'Interviews' }
@@ -53,12 +53,12 @@ export default function CandidateInterviewsPage() {
                 Session Details
               </Link>
               <a
-                href={session.meetingUrl || 'https://meet.arclight.io/trial-crucible-201'}
+                href={session.meetingUrl || 'https://meet.arclight.io/apex-interview-201'}
                 target="_blank"
                 rel="noreferrer"
                 className="px-3.5 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-xs flex items-center gap-1"
               >
-                <span>Chamber Link</span>
+                <span>Meeting Link</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>

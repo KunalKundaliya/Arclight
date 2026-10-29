@@ -1,7 +1,7 @@
 export const initialRooms = [
   {
     id: 'room-01',
-    name: 'Chamber Alpha (Hybrid Nexus)',
+    name: 'Room Alpha (Hybrid Studio)',
     location: 'Building 4, Floor 3 — Suite 302',
     capacity: 6,
     type: 'Hybrid Physical',
@@ -12,7 +12,7 @@ export const initialRooms = [
   },
   {
     id: 'room-02',
-    name: 'Sanctum West Pod 04',
+    name: 'Interview Pod West 04',
     location: 'West Wing, Floor 2',
     capacity: 3,
     type: 'Physical Pod',
@@ -23,7 +23,7 @@ export const initialRooms = [
   },
   {
     id: 'room-03',
-    name: 'Virtual Cloud Chamber 1 (CodeCollab)',
+    name: 'Virtual Meeting Room 1 (CodeCollab)',
     location: 'Cloud Infrastructure / AWS us-east-1',
     capacity: 20,
     type: 'Virtual Hub',
@@ -34,7 +34,7 @@ export const initialRooms = [
   },
   {
     id: 'room-04',
-    name: 'Virtual Cloud Chamber 2 (Zoom Enterprise)',
+    name: 'Virtual Meeting Room 2 (Zoom Enterprise)',
     location: 'Cloud Infrastructure / Global Edge',
     capacity: 50,
     type: 'Virtual Hub',

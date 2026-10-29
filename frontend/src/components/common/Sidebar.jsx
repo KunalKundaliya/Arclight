@@ -11,39 +11,27 @@ export default function Sidebar({ isOpen, onClose }) {
   const { currentRole, user, switchRole } = useAuth();
   const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
 
-  // Clean, distinct routes for Coordinator (no duplicate destinations)
+  // Streamlined, high-impact core navigation
   const coordinatorLinks = [
     { to: '/coordinator', label: 'Overview', end: true, showArrow: true },
     { to: '/coordinator/drives', label: 'Placement drives' },
-    { to: '/coordinator/candidates', label: 'Candidates' },
-    { to: '/coordinator/interviewers', label: 'Interviewers' },
-    { to: '/coordinator/rooms', label: 'Rooms & resources' },
-    { to: '/coordinator/scheduler', label: 'AI scheduler' },
-    { to: '/coordinator/calendar', label: 'Calendar' },
-    { to: '/coordinator/pipeline', label: 'Recruitment pipeline' },
-    { to: '/coordinator/evaluations', label: 'Evaluations' },
-    { to: '/coordinator/reports', label: 'Analytics & reports' },
+    { to: '/coordinator/scheduler', label: 'AI scheduler & timetable' },
+    { to: '/coordinator/candidates', label: 'Candidates pipeline' },
+    { to: '/coordinator/interviewers', label: 'Interviewers & panels' },
     { to: '/coordinator/notifications', label: 'Notifications' },
-    { to: '/coordinator/settings', label: 'Settings' },
   ];
 
   const interviewerLinks = [
     { to: '/interviewer', label: 'Overview', end: true, showArrow: true },
-    { to: '/interviewer/calendar', label: 'Calendar' },
+    { to: '/interviewer/calendar', label: 'My schedule' },
     { to: '/interviewer/availability', label: 'Weekly availability' },
-    { to: '/interviewer/evaluations/eval-303', label: 'Pending evaluation' },
     { to: '/interviewer/notifications', label: 'Notifications' },
-    { to: '/interviewer/profile', label: 'My profile' },
   ];
 
   const candidateLinks = [
-    { to: '/candidate', label: 'Overview', end: true, showArrow: true },
+    { to: '/candidate', label: 'My dashboard', end: true, showArrow: true },
     { to: '/candidate/book/round-101', label: 'Self-book a slot' },
-    { to: '/candidate/interviews', label: 'My interviews' },
-    { to: '/candidate/calendar', label: 'Trial calendar' },
-    { to: '/candidate/progress', label: 'Progress tracker' },
     { to: '/candidate/notifications', label: 'Notifications' },
-    { to: '/candidate/profile', label: 'My profile' },
   ];
 
   let links = coordinatorLinks;
@@ -52,12 +40,12 @@ export default function Sidebar({ isOpen, onClose }) {
 
   if (currentRole === ROLES.INTERVIEWER) {
     links = interviewerLinks;
-    workspaceTitle = 'Northstar Panel';
-    workspaceSubtitle = 'Interviewer terminal';
+    workspaceTitle = 'Webster Evaluation Panel';
+    workspaceSubtitle = 'Webster 2026 Placement Drive';
   } else if (currentRole === ROLES.CANDIDATE) {
     links = candidateLinks;
-    workspaceTitle = 'Candidate Portal';
-    workspaceSubtitle = 'Webster recruitment';
+    workspaceTitle = 'Webster Candidate Portal';
+    workspaceSubtitle = 'Webster 2026 Placement Drive';
   }
 
   return (
@@ -178,7 +166,7 @@ export default function Sidebar({ isOpen, onClose }) {
               {user?.name || 'Maya Chen'}
             </div>
             <div className="text-[11px] text-slate-400 font-normal leading-tight mt-0.5 truncate">
-              {currentRole === ROLES.COORDINATOR ? 'Coordinator · Arclight' : currentRole === ROLES.INTERVIEWER ? 'Panel Lead · Northstar' : 'Applicant · Webster 2026'}
+              {currentRole === ROLES.COORDINATOR ? 'Coordinator · ArcLight' : currentRole === ROLES.INTERVIEWER ? 'Panel Lead · Webster 2026' : 'Candidate · Webster 2026'}
             </div>
           </div>
         </div>

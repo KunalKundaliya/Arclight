@@ -19,7 +19,7 @@ export const initialInterviews = [
     duration: '45 min',
     status: 'Scheduled',
     evaluationStatus: 'Pending',
-    meetingUrl: 'https://meet.arclight.io/northstar-aanya',
+    meetingUrl: 'https://meet.arclight.io/apex-aanya',
     score: null,
     badgeText: 'R1 · Priya · C-201',
     notes: 'Focus on distributed data structures, time complexity analysis, and system decomposition.'
@@ -44,7 +44,7 @@ export const initialInterviews = [
     duration: '45 min',
     status: 'Scheduled',
     evaluationStatus: 'Pending',
-    meetingUrl: 'https://meet.arclight.io/northstar-dev',
+    meetingUrl: 'https://meet.arclight.io/apex-dev',
     score: null,
     badgeText: 'R1 · Priya · C-201',
     notes: 'Concurrency primitives, thread-safety, and lock contention avoidance.'
@@ -69,7 +69,7 @@ export const initialInterviews = [
     duration: '30 min',
     status: 'Scheduled',
     evaluationStatus: 'Pending',
-    meetingUrl: 'https://meet.arclight.io/northstar-rohan',
+    meetingUrl: 'https://meet.arclight.io/apex-rohan',
     score: null,
     badgeText: 'R1 · Devon · C-203',
     notes: 'Cloud architecture fundamentals and deployment containerization.'
@@ -94,7 +94,7 @@ export const initialInterviews = [
     duration: '45 min',
     status: 'Scheduled',
     evaluationStatus: 'Pending',
-    meetingUrl: 'https://meet.arclight.io/northstar-neha',
+    meetingUrl: 'https://meet.arclight.io/apex-neha',
     score: null,
     badgeText: 'R1 · Aria · C-202',
     notes: 'Component tree design and asynchronous state management.'
@@ -103,7 +103,7 @@ export const initialInterviews = [
     id: 'intv-105',
     candidateId: 'cand-cnf',
     candidateName: 'Conflict · Panel A',
-    candidateEmail: 'panel-a@northstar.io',
+    candidateEmail: 'panel-a@apexdynamics.com',
     candidateRole: 'Software Development Engineer',
     driveId: 'drv-101',
     interviewerIds: ['int-01'],
@@ -144,7 +144,7 @@ export const initialInterviews = [
     duration: '45 min',
     status: 'Scheduled',
     evaluationStatus: 'Pending',
-    meetingUrl: 'https://meet.arclight.io/northstar-mira',
+    meetingUrl: 'https://meet.arclight.io/apex-mira',
     score: null,
     badgeText: 'R1 · Priya · C-201',
     notes: 'Microservices interaction patterns and distributed transaction limits.'

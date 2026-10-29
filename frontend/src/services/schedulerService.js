@@ -23,7 +23,8 @@ export const schedulerService = {
     candidates = [],
     interviewers = [],
     rooms = [],
-    bufferMinutes = 15
+    bufferMinutes = 15,
+    options = {}
   }) {
     // Attempt backend solver first
     try {
@@ -33,7 +34,8 @@ export const schedulerService = {
         startDate,
         endDate,
         durationMinutes,
-        bufferMinutes
+        bufferMinutes,
+        options
       });
       if (response && response.success && response.data) {
         console.log('[SchedulerService] Received solution from backend CSP engine');

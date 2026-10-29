@@ -19,7 +19,7 @@ const STORAGE_KEYS = {
 };
 
 const defaultSettings = {
-  orgName: 'Nexus Quantum Laboratories',
+  orgName: 'Webster University Career & Placement Cell',
   orgDomain: 'arclight.io',
   defaultDuration: 60,
   bufferMinutes: 15,

@@ -3,7 +3,10 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const { Pool } = pkg;
+const { Pool, types } = pkg;
+
+// Parse PostgreSQL DATE type (OID 1082) as raw string 'YYYY-MM-DD' instead of timezone-shifted Date object
+types.setTypeParser(1082, (str) => str);
 
 export const pool = new Pool({
   host: process.env.PGHOST || 'localhost',

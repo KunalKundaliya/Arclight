@@ -22,9 +22,9 @@ export const DEMO_PERSONAS = {
   [ROLES.INTERVIEWER]: {
     id: 'usr-int-1',
     name: 'Priya Nair',
-    email: 'priya.nair@northstar.io',
+    email: 'priya.nair@apexdynamics.com',
     role: ROLES.INTERVIEWER,
-    roleTitle: 'Senior Systems Architect',
+    roleTitle: 'Senior Systems Architect (Apex Dynamics)',
     avatar: 'PN'
   },
   [ROLES.CANDIDATE]: {

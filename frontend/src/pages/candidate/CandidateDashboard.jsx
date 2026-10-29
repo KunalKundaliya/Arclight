@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import PageHeader from '../../components/common/PageHeader';
 import StatusBadge from '../../components/common/StatusBadge';
+import CalendarExportButtons from '../../components/common/CalendarExportButtons';
 import { storageService } from '../../services/storageService';
 import { useAuth } from '../../context/AuthContext';
 import { useRealtime } from '../../context/RealtimeContext';
@@ -33,11 +34,13 @@ export default function CandidateDashboard() {
     setInterviews(storageService.getInterviews());
   }, [lastUpdated]);
 
-  // Soren Vance (cand-01) or currently logged in candidate
-  const candidate = candidates.find(c => c.id === 'cand-01') || candidates[0] || { name: 'Soren Vance', id: 'cand-01' };
+  // Logged in candidate (Aanya Shah) or primary candidate
+  const activeName = user?.name || 'Aanya Shah';
+  const candidate = candidates.find(c => c.id === 'cand-01') || candidates[0] || { name: activeName, id: 'cand-01' };
   const myInterviews = interviews.filter(i =>
     i.candidateId === candidate.id ||
     (candidate.name && i.candidateName?.toLowerCase().includes(candidate.name.toLowerCase())) ||
+    i.candidateName?.toLowerCase().includes('aanya') ||
     i.candidateName?.toLowerCase().includes('soren')
   );
 
@@ -56,7 +59,7 @@ export default function CandidateDashboard() {
     duration: '60 min',
     interviewerNames: ['Dr. Evelyn Voss', 'Devon Thorne'],
     roomName: 'Virtual Cloud Chamber 1 (CodeCollab)',
-    meetingUrl: 'https://meet.arclight.io/trial-crucible-201',
+    meetingUrl: 'https://meet.arclight.io/apex-interview-201',
     status: 'Scheduled'
   };
 
@@ -73,13 +76,13 @@ export default function CandidateDashboard() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Candidate Trial Portal"
-        subtitle={`Welcome, ${candidate.name}. You are advancing through the Fall 2026 Engineering Crucible.`}
+        title="Candidate Placement Portal"
+        subtitle={`Welcome, ${candidate.name}. You are advancing through the Fall 2026 Campus Placement Drive.`}
         actions={
           <div className="flex items-center gap-2.5">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
               <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
-              {isConnected ? 'Real-Time Telemetry' : 'Reconnecting...'}
+              {isConnected ? 'Live Sync Active' : 'Connecting...'}
             </span>
             <Link
               to="/candidate/book/round-101"
@@ -101,7 +104,7 @@ export default function CandidateDashboard() {
           <div className="space-y-3 max-w-xl">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-500/30 text-indigo-200 text-xs font-mono border border-indigo-400/30">
               <Sparkles className="w-3.5 h-3.5 text-indigo-300" />
-              <span>Confirmed Trial Session</span>
+              <span>Confirmed Interview Session</span>
             </div>
 
             <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-snug">
@@ -130,18 +133,23 @@ export default function CandidateDashboard() {
 
           <div className="flex flex-col gap-2 shrink-0">
             <a
-              href={nextInterview.meetingUrl || 'https://meet.arclight.io/trial-crucible-201'}
+              href={nextInterview.meetingUrl || 'https://meet.arclight.io/apex-interview-201'}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-indigo-500 hover:bg-indigo-400 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-500/30 transition-all hover:scale-[1.02]"
             >
               <Video className="w-4 h-4" />
-              <span>Join Live Virtual Chamber</span>
+              <span>Join Live Interview Meeting</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
+
+            <div className="bg-slate-900/60 p-2 rounded-xl border border-indigo-400/20 backdrop-blur-xs flex justify-center">
+              <CalendarExportButtons interview={nextInterview} />
+            </div>
+
             <Link
               to="/candidate/calendar"
-              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-xl transition-colors"
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-xl transition-colors text-center"
             >
               <span>View On My Calendar</span>
             </Link>
@@ -154,7 +162,7 @@ export default function CandidateDashboard() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-base font-bold text-slate-900">Your Recruitment Progression Tracker</h3>
-            <p className="text-xs text-slate-500">Track your standing across all multi-stage crucible rounds</p>
+            <p className="text-xs text-slate-500">Track your standing across all placement assessment rounds</p>
           </div>
           <span className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
             Current Stage: Round 2
@@ -219,13 +227,16 @@ export default function CandidateDashboard() {
 
           <div className="space-y-3 text-xs">
             {myInterviews.map((item) => (
-              <div key={item.id} className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
+              <div key={item.id} className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <div className="font-bold text-slate-900">{item.roundTitle}</div>
                   <div className="text-slate-500">{item.date} • {item.startTime} - {item.endTime}</div>
                   <div className="text-slate-400 font-mono text-[11px] mt-0.5">{item.roomName}</div>
                 </div>
-                <StatusBadge status={item.status} />
+                <div className="flex items-center gap-2.5 shrink-0">
+                  <CalendarExportButtons interview={item} compact={true} />
+                  <StatusBadge status={item.status} />
+                </div>
               </div>
             ))}
           </div>

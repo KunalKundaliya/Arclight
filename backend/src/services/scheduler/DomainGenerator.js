@@ -392,7 +392,42 @@ export class DomainGenerator {
               // 2. Right-sizing room: minimize wasted capacity
               const wastedCap = ((room.capacity || 4) - (variable.panelSize + 1)) * 0.2;
 
-              const cost = panelWorkload + wastedCap;
+              // 3. Skill affinity bonus (LCV value ordering)
+              let skillAffinityBonus = 0;
+              const candSkills = Array.isArray(cand.skills) ? cand.skills : [];
+              if (candSkills.length > 0) {
+                const panelSkillsSet = new Set();
+                for (const interviewer of panel) {
+                  (interviewer.skills || []).forEach(s => panelSkillsSet.add(s.trim().toLowerCase()));
+                }
+                const matchCount = candSkills.filter(s => {
+                  const sLower = s.trim().toLowerCase();
+                  if (panelSkillsSet.has(sLower)) return true;
+                  for (const ps of panelSkillsSet) {
+                    if (ps.includes(sLower) || sLower.includes(ps)) return true;
+                    if (sLower.includes('system') && ps.includes('system')) return true;
+                    if (sLower.includes('distribut') && ps.includes('distribut')) return true;
+                    if ((sLower.includes('consensus') || sLower.includes('raft')) && (ps.includes('consensus') || ps.includes('raft'))) return true;
+                    if ((sLower.includes('cloud') || sLower.includes('k8s') || sLower.includes('kubernetes')) && (ps.includes('cloud') || ps.includes('kubernetes') || ps.includes('terraform') || ps.includes('linux'))) return true;
+                  }
+                  return false;
+                }).length;
+                skillAffinityBonus = Math.min(2, matchCount) * 4;
+              }
+
+              // 4. Drive day spread heuristic to balance load across recruitment week
+              const candIdx = candidates.findIndex(c => c.id === cand.id);
+              const uniqueDates = [...new Set(grid.map(g => g.date))];
+              let dayBalanceAdjustment = 0;
+              if (uniqueDates.length > 1 && candIdx >= 0) {
+                const preferredDayIdx = candIdx % uniqueDates.length;
+                const slotDayIdx = uniqueDates.indexOf(slot.date);
+                if (slotDayIdx === preferredDayIdx) {
+                  dayBalanceAdjustment = -5;
+                }
+              }
+
+              const cost = panelWorkload + wastedCap - skillAffinityBonus + dayBalanceAdjustment;
 
               const domainValue = new DomainValue({
                 date: slot.date,

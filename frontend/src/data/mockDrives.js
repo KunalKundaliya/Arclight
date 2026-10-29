@@ -1,8 +1,8 @@
 export const initialDrives = [
   {
     id: 'drv-101',
-    name: 'Northstar Labs · Engineering',
-    company: 'Northstar Labs',
+    name: 'Apex Dynamics · Engineering',
+    company: 'Apex Dynamics',
     role: 'Software Development Engineer',
     startDate: '2026-11-02',
     endDate: '2026-11-06',
@@ -58,5 +58,20 @@ export const initialDrives = [
     targetHires: 8,
     completedInterviews: 42,
     totalScheduled: 42,
+  },
+  {
+    id: 'drv-105',
+    name: 'Apex Dynamics · Fall 2026',
+    company: 'Apex Dynamics',
+    role: 'Distributed Systems & Platform Architect',
+    startDate: '2026-11-02',
+    endDate: '2026-11-06',
+    candidatesCount: 65,
+    rounds: ['System Architecture', 'Coding Challenge', 'Leadership & Fit'],
+    status: 'Active',
+    description: 'Flagship systems architecture and distributed consensus recruitment drive for Fall 2026.',
+    targetHires: 15,
+    completedInterviews: 0,
+    totalScheduled: 0,
   }
 ];

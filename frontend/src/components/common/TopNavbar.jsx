@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Moon, RotateCcw, LogOut, Check } from 'lucide-react';
+import { Search, RotateCcw, LogOut, Check } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth, ROLES } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -61,21 +61,8 @@ export default function TopNavbar({ onMenuClick }) {
         </div>
       </div>
 
-      {/* Right side items: VISUAL CONCEPT · DEMO DATA, Moon icon, Avatar */}
-      <div className="flex items-center gap-5">
-        <div className="hidden sm:inline-block text-[11px] font-mono uppercase tracking-wider text-slate-400 font-medium">
-          VISUAL CONCEPT · DEMO DATA
-        </div>
-
-        {/* Theme Moon Icon */}
-        <button
-          onClick={() => showToast('Dark mode simulation toggled', 'info')}
-          className="text-slate-400 hover:text-slate-600 transition-colors p-2 rounded-lg hover:bg-slate-50"
-          title="Toggle theme"
-        >
-          <Moon className="w-4 h-4" />
-        </button>
-
+      {/* Right side items: User profile avatar with role switcher */}
+      <div className="flex items-center gap-3">
         {/* User initials circle with dropdown */}
         <div className="relative">
           <button

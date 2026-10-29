@@ -30,6 +30,7 @@ export const mockRoundDistribution = [
 export const mockKpis = {
   activeDrives: 4,
   activeDrivesNote: '2 opening this week',
+  candidatesInApex: 240,
   candidatesInNorthstar: 240,
   candidatesScheduledNote: '228 scheduled · 95% coverage',
   interviewsThisWeek: 228,

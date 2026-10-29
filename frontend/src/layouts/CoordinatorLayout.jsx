@@ -1,10 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/common/Sidebar';
 import TopNavbar from '../components/common/TopNavbar';
+import { useAuth, ROLES } from '../context/AuthContext';
 
 export default function CoordinatorLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { currentRole, switchRole } = useAuth();
+
+  useEffect(() => {
+    if (currentRole !== ROLES.COORDINATOR) {
+      if (typeof switchRole === 'function') switchRole(ROLES.COORDINATOR);
+    }
+  }, [currentRole, switchRole]);
 
   return (
     <div className="min-h-screen bg-[#fafafd] text-slate-800 flex font-sans">

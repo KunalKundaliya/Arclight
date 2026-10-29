@@ -34,7 +34,7 @@ export default function CandidateProgressPage() {
     <div className="space-y-6">
       <PageHeader
         title="Recruitment Pipeline Progression"
-        subtitle="Live status tracker across all stages of the Fall 2026 Engineering Crucible"
+        subtitle="Live status tracker across all stages of the Fall 2026 Apex Placement Drive"
         breadcrumbs={[
           { label: 'Candidate', to: '/candidate' },
           { label: 'Progress' }
@@ -44,7 +44,7 @@ export default function CandidateProgressPage() {
       <div className="bg-white rounded-2xl border border-slate-200/90 shadow-subtle p-6 space-y-6">
         <div className="flex items-center justify-between pb-4 border-b border-slate-100">
           <div>
-            <h3 className="text-base font-bold text-slate-900">Multi-Stage Crucible Roadmap</h3>
+            <h3 className="text-base font-bold text-slate-900">Placement Stages Roadmap</h3>
             <p className="text-xs text-slate-500">Track milestones and evaluation benchmarks</p>
           </div>
           <span className="text-xs font-mono font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded border border-indigo-200">

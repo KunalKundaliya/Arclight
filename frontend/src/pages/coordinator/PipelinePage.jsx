@@ -30,7 +30,7 @@ export default function PipelinePage() {
   const stages = [
     {
       id: 'Coding',
-      name: '1. Coding Crucible',
+      name: '1. Coding Assessment',
       badge: 'bg-cyan-500',
       description: 'Algorithmic efficiency, time complexity, and low-level concurrency'
     },
@@ -262,8 +262,8 @@ export default function PipelinePage() {
             {/* Promote Action */}
             <div className="p-4 rounded-xl bg-indigo-50/70 border border-indigo-200 flex items-center justify-between">
               <div>
-                <div className="font-bold text-indigo-950">Promote to Next Trial Stage</div>
-                <div className="text-[11px] text-indigo-700">Advance candidate through the multi-stage crucible</div>
+                <div className="font-bold text-indigo-950">Promote to Next Stage</div>
+                <div className="text-[11px] text-indigo-700">Advance candidate through the recruitment pipeline</div>
               </div>
               <button
                 onClick={() => handlePromote(selectedCandidate.id)}

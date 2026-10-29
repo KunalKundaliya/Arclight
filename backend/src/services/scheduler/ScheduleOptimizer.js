@@ -106,7 +106,8 @@ export class ScheduleOptimizer {
       // 0: Chamber Reassignment (reduces room switches)
       // 1: Interviewer Swap between compatible sessions (balances workload & fatigue)
       // 2: Time Slot Swap between two candidates
-      const operatorChoice = Math.floor(Math.random() * 3);
+      // 3: Interviewer Substitution from Available Pool (optimizes faculty utilization & skill affinity)
+      const operatorChoice = Math.floor(Math.random() * 4);
       let candidateNeighbor = null;
 
       if (operatorChoice === 0 && availableRooms.length > 1) {
@@ -142,7 +143,7 @@ export class ScheduleOptimizer {
             candidateNeighbor[idxB].interviewerNames = tempName ? [tempName] : [];
           }
         }
-      } else {
+      } else if (operatorChoice === 2) {
         // Operator: Swap full time slots between two candidates
         const idxA = Math.floor(Math.random() * currentAssignments.length);
         const idxB = Math.floor(Math.random() * currentAssignments.length);
@@ -170,6 +171,17 @@ export class ScheduleOptimizer {
           candidateNeighbor[idxB].endTime = tempEnd;
           candidateNeighbor[idxB].startMinutes = tempStartMin;
           candidateNeighbor[idxB].endMinutes = tempEndMin;
+        }
+      } else if (operatorChoice === 3 && availableInterviewers.length > 0) {
+        // Operator: Substitute interviewer with another qualified assessor from faculty pool
+        const targetIdx = Math.floor(Math.random() * currentAssignments.length);
+        const target = currentAssignments[targetIdx];
+        const altIntv = availableInterviewers[Math.floor(Math.random() * availableInterviewers.length)];
+
+        if (!target.interviewerIds?.includes(altIntv.id)) {
+          candidateNeighbor = cloneSchedule(currentAssignments);
+          candidateNeighbor[targetIdx].interviewerIds = [altIntv.id];
+          candidateNeighbor[targetIdx].interviewerNames = [altIntv.name];
         }
       }
 

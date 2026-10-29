@@ -38,7 +38,7 @@ export default function LoginPage() {
   const handleQuickDemoEntry = async (role) => {
     const credentials = {
       [ROLES.COORDINATOR]: { email: 'maya.chen@arclight.io', password: 'password123' },
-      [ROLES.INTERVIEWER]: { email: 'priya.nair@northstar.io', password: 'password123' },
+      [ROLES.INTERVIEWER]: { email: 'priya.nair@apexdynamics.com', password: 'password123' },
       [ROLES.CANDIDATE]: { email: 'aanya.shah@webster.edu', password: 'password123' },
     };
 

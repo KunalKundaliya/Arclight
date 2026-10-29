@@ -17,6 +17,7 @@ import PageHeader from '../../components/common/PageHeader';
 import Modal from '../../components/common/Modal';
 import { storageService } from '../../services/storageService';
 import { apiClient } from '../../services/apiClient';
+import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { generateAvailableSlotsForDate } from '../../utils/slotGenerator';
 import CalendarExportButtons from '../../components/common/CalendarExportButtons';
@@ -24,6 +25,10 @@ import CalendarExportButtons from '../../components/common/CalendarExportButtons
 export default function CandidateBookingPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { user } = useAuth();
+
+  const currentCandidateName = user?.name || 'Aanya Shah';
+  const currentCandidateEmail = user?.email || 'aanya.shah@webster.edu';
 
   const [selectedDate, setSelectedDate] = useState('2026-10-26');
   const [selectedSlot, setSelectedSlot] = useState(null);
@@ -91,10 +96,10 @@ export default function CandidateBookingPage() {
     // Create new interview entry
     const newInterview = {
       id: `intv-selfbook-${Date.now()}`,
-      candidateId: 'cand-01',
-      candidateName: 'Soren Vance',
-      candidateEmail: 'soren.vance@mit.edu',
-      candidateRole: 'Senior Distributed Systems Engineer',
+      candidateId: user?.id || 'cand-01',
+      candidateName: currentCandidateName,
+      candidateEmail: currentCandidateEmail,
+      candidateRole: 'Software Development Engineer',
       driveId: 'drv-101',
       interviewerNames: selectedSlot.interviewers,
       interviewerIds: selectedSlot.interviewerIds || ['int-01'],
@@ -108,7 +113,7 @@ export default function CandidateBookingPage() {
       duration: selectedSlot.duration,
       status: 'Scheduled',
       evaluationStatus: 'Pending',
-      meetingUrl: 'https://meet.arclight.io/trial-crucible-selfbook',
+      meetingUrl: 'https://meet.arclight.io/apex-interview-selfbook',
       notes: 'Candidate self-booked slot via intelligent scheduling portal.'
     };
 
@@ -149,7 +154,7 @@ export default function CandidateBookingPage() {
         <Info className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
         <div>
           <span className="font-semibold block">Intelligent Slot Availability:</span>
-          All slots presented below have already been verified by the Constraint Satisfaction Engine against interviewer availability calendars and room AV hardware. Selecting a slot guarantees zero conflicts.
+          All open slots are automatically verified against interviewer schedules and room availability with zero scheduling conflicts.
         </div>
       </div>
 
@@ -159,7 +164,7 @@ export default function CandidateBookingPage() {
           <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-sm">
             <CheckCircle2 className="w-8 h-8" />
           </div>
-          <h3 className="text-xl font-extrabold text-slate-900">Your Trial Session is Confirmed!</h3>
+          <h3 className="text-xl font-extrabold text-slate-900">Your Interview Session is Confirmed!</h3>
           <p className="text-xs text-slate-600 leading-relaxed max-w-md mx-auto">
             You are scheduled for <strong>{selectedSlot?.roundTitle}</strong> on <strong>{selectedDate}</strong> at <strong>{selectedSlot?.startTime} - {selectedSlot?.endTime}</strong> with <strong>{selectedSlot?.interviewers.join(', ')}</strong>.
           </p>
@@ -174,7 +179,7 @@ export default function CandidateBookingPage() {
               <span className="font-bold text-indigo-600">{selectedSlot?.startTime} - {selectedSlot?.endTime}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">Chamber:</span>
+              <span className="text-slate-400">Room:</span>
               <span className="font-bold text-slate-800">{selectedSlot?.room}</span>
             </div>
           </div>
@@ -184,7 +189,7 @@ export default function CandidateBookingPage() {
               interview={{
                 ...selectedSlot,
                 date: selectedDate,
-                candidateName: 'Soren Vance'
+                candidateName: currentCandidateName
               }}
             />
           </div>
@@ -210,7 +215,7 @@ export default function CandidateBookingPage() {
           {/* Date Selector Pills */}
           <div className="bg-white rounded-2xl border border-slate-200/90 shadow-subtle p-5">
             <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">
-              1. Select Trial Date
+              1. Select Interview Date
             </h4>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
               {availableDates.map(item => (
@@ -331,7 +336,7 @@ export default function CandidateBookingPage() {
       <Modal
         isOpen={isConfirmModalOpen}
         onClose={() => setIsConfirmModalOpen(false)}
-        title="Confirm Trial Slot Booking"
+        title="Confirm Interview Slot Booking"
         subtitle="Review your session details before committing"
       >
         {selectedSlot && (
@@ -347,7 +352,7 @@ export default function CandidateBookingPage() {
             </div>
 
             <p className="text-slate-500 text-xs leading-relaxed">
-              Upon clicking "Confirm & Lock Slot", a verified calendar invitation with WebRTC trial chamber credentials will be stored in your portal.
+              Upon clicking "Confirm & Lock Slot", your interview booking and calendar invitation details will be stored in your portal.
             </p>
 
             <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">

@@ -26,7 +26,7 @@ export default function InterviewDetailPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-2 text-xs text-slate-500">
         <Link to="/interviewer" className="hover:text-indigo-600 flex items-center gap-1 font-medium">
-          <ChevronLeft className="w-3.5 h-3.5" /> Back to Terminal
+          <ChevronLeft className="w-3.5 h-3.5" /> Back to My Schedule
         </Link>
       </div>
 
@@ -74,34 +74,34 @@ export default function InterviewDetailPage() {
                 <div className="text-indigo-600 font-mono mt-0.5">{session.startTime} - {session.endTime} ({session.duration})</div>
               </div>
               <div className="p-3 rounded-lg bg-slate-50 border border-slate-100">
-                <span className="text-[10px] text-slate-400 uppercase font-semibold block">Assigned Chamber</span>
+                <span className="text-[10px] text-slate-400 uppercase font-semibold block">Assigned Room</span>
                 <div className="font-bold text-slate-800 text-sm mt-0.5">{session.roomName}</div>
                 <div className="text-slate-500 mt-0.5">High-Speed Fiber & Collaborative Code IDE</div>
               </div>
             </div>
 
-            {/* Launch Chamber Banner */}
+            {/* Launch Meeting Banner */}
             <div className="p-4 rounded-xl bg-gradient-to-r from-indigo-900 to-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
               <div>
-                <h4 className="font-bold text-sm text-white">Virtual Trial Room Ready</h4>
+                <h4 className="font-bold text-sm text-white">Virtual Interview Room Ready</h4>
                 <p className="text-xs text-indigo-200 mt-0.5">Automated transcription and real-time code sandbox initialized</p>
               </div>
               <a
-                href={session.meetingUrl || 'https://meet.arclight.io/trial-crucible-201'}
+                href={session.meetingUrl || 'https://meet.arclight.io/apex-interview-201'}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-400 text-white text-xs font-semibold rounded-lg transition-colors shrink-0 shadow-xs"
               >
                 <Video className="w-4 h-4" />
-                <span>Enter Live Video Chamber</span>
+                <span>Join Live Video Meeting</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </a>
             </div>
           </div>
 
-          {/* Directives */}
+          {/* Round Guidelines */}
           <div className="bg-white rounded-2xl border border-slate-200/90 shadow-subtle p-6 space-y-3">
-            <h4 className="text-sm font-bold text-slate-900">Technical Directives for this Round</h4>
+            <h4 className="text-sm font-bold text-slate-900">Evaluation Guidelines for this Round</h4>
             <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-700 leading-relaxed">
               {session.notes || 'Evaluate candidate on high-throughput message replication, byzantine fault tolerance, and memory layout tradeoffs.'}
             </div>

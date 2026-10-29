@@ -26,6 +26,7 @@ export class BackendSchedulerEngine {
     candidates = [],
     interviewers = [],
     rooms = [],
+    existingInterviews = [],
     options = {}
   }) {
     const activeRooms = rooms.length > 0 ? rooms : [
@@ -52,6 +53,13 @@ export class BackendSchedulerEngine {
     const interviewerMap = new Map(activeInterviewers.map(i => [i.id, i]));
     const roomMap = new Map(activeRooms.map(r => [r.id, r]));
 
+    // For technical architecture/coding rounds, prioritize domain-qualified engineering assessors
+    const isTechRound = /tech|system|arch|code|coding/i.test(roundName);
+    const techFacultyPool = isTechRound
+      ? activeInterviewers.filter(i => i.department !== 'People Operations' && i.department !== 'Human Resources')
+      : activeInterviewers;
+    const poolToSchedule = techFacultyPool.length >= 3 ? techFacultyPool : activeInterviewers;
+
     // Step 1: Execute Stage 4 CSP Engine for Hard-Constraint Feasibility
     const solverResult = CspSolver.solveDrive({
       driveId,
@@ -61,8 +69,9 @@ export class BackendSchedulerEngine {
       durationMinutes,
       bufferMinutes,
       candidates: candidatePool,
-      interviewers: activeInterviewers,
+      interviewers: poolToSchedule,
       rooms: activeRooms,
+      existingInterviews,
       options: {
         stepMinutes: 15,
         variableHeuristic: 'MRV',
@@ -107,8 +116,9 @@ export class BackendSchedulerEngine {
     let optimizationReport = null;
     const context = {
       candidates: candidatePool,
-      interviewers: activeInterviewers,
-      rooms: activeRooms
+      interviewers: poolToSchedule,
+      rooms: activeRooms,
+      existingInterviews
     };
 
     if (options.optimize !== false && formattedAssignments.length > 1) {

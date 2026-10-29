@@ -562,6 +562,7 @@ class DbService {
           totalCompleted,
           completionRate,
           activeDrives: parseInt(drivesCountRes.rows[0]?.count, 10) || 4,
+          candidatesInApex: totalPool,
           candidatesInNorthstar: totalPool,
           averageDurationMins: 45,
           interviewerSatisfaction: '4.9 / 5.0'
@@ -580,6 +581,7 @@ class DbService {
           totalCompleted: 38,
           completionRate: '95.2%',
           activeDrives: 4,
+          candidatesInApex: 48,
           candidatesInNorthstar: 48,
           averageDurationMins: 45,
           interviewerSatisfaction: '4.9 / 5.0'

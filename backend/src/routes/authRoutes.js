@@ -14,8 +14,12 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email and password are required' });
     }
 
-    // 1. Look up user by email
-    const userRes = await pool.query('SELECT * FROM users WHERE LOWER(email) = LOWER($1)', [email.trim()]);
+    // 1. Look up user by email (supports apex dynamics and legacy alias)
+    let lookupEmail = email.trim().toLowerCase();
+    if (lookupEmail === 'priya.nair@northstar.io') {
+      lookupEmail = 'priya.nair@apexdynamics.com';
+    }
+    const userRes = await pool.query('SELECT * FROM users WHERE LOWER(email) = LOWER($1) OR (LOWER($1) = \'priya.nair@apexdynamics.com\' AND LOWER(email) = \'priya.nair@northstar.io\')', [lookupEmail]);
     if (userRes.rowCount === 0) {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }

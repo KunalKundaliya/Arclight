@@ -30,6 +30,10 @@ router.post('/solve', async (req, res) => {
     const allCandidates = await dbService.getCandidates();
     const interviewers = await dbService.getInterviewers();
     const rooms = await dbService.getRooms();
+    const allInterviews = await dbService.getInterviews();
+
+    // Respect existing interviews for other drives to prevent concurrency collisions
+    const existingInterviews = allInterviews.filter(i => !driveId || i.driveId !== driveId);
 
     // Filter candidates for this drive if applicable, or take all
     const driveCandidates = allCandidates.filter(c => !driveId || c.driveId === driveId || !c.driveId);
@@ -45,6 +49,7 @@ router.post('/solve', async (req, res) => {
       candidates: candidatesToSchedule,
       interviewers,
       rooms,
+      existingInterviews,
       options
     });
 
@@ -107,6 +112,12 @@ router.post('/apply', async (req, res) => {
       });
     }
 
+    const effectiveOptions = {
+      replaceExistingForDrive: true,
+      ...options,
+      ...(req.body.replaceExistingForDrive !== undefined ? { replaceExistingForDrive: req.body.replaceExistingForDrive } : {})
+    };
+
     let targetAssignments = assignments;
 
     // If assignments were not provided, solve first and then apply
@@ -114,13 +125,16 @@ router.post('/apply', async (req, res) => {
       const allCandidates = await dbService.getCandidates();
       const interviewers = await dbService.getInterviewers();
       const rooms = await dbService.getRooms();
+      const allInterviews = await dbService.getInterviews();
+      const existingInterviews = allInterviews.filter(i => !driveId || i.driveId !== driveId);
 
       const solveResult = BackendSchedulerEngine.solve({
         driveId,
         candidates: allCandidates.filter(c => !c.driveId || c.driveId === driveId),
         interviewers,
         rooms,
-        options
+        existingInterviews,
+        options: effectiveOptions
       });
 
       targetAssignments = solveResult.assignments || [];
@@ -136,7 +150,7 @@ router.post('/apply', async (req, res) => {
     const result = await SchedulePersistenceService.applyScheduleTransaction({
       driveId,
       assignments: targetAssignments,
-      options
+      options: effectiveOptions
     });
 
     if (!result.success) {

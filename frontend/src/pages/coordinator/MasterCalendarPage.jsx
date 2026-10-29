@@ -10,7 +10,8 @@ import {
   ExternalLink,
   ShieldCheck,
   CheckCircle2,
-  RefreshCw
+  RefreshCw,
+  Sparkles
 } from 'lucide-react';
 import PageHeader from '../../components/common/PageHeader';
 import FilterDropdown from '../../components/common/FilterDropdown';
@@ -18,7 +19,31 @@ import StatusBadge from '../../components/common/StatusBadge';
 import Modal from '../../components/common/Modal';
 import { storageService } from '../../services/storageService';
 import { apiClient } from '../../services/apiClient';
+import { useRealtime } from '../../context/RealtimeContext';
 import CalendarExportButtons from '../../components/common/CalendarExportButtons';
+
+// Timezone-safe date normalizer that handles YYYY-MM-DD, ISO timestamps, and Date objects
+export function normalizeDate(val) {
+  if (!val) return '';
+  if (typeof val === 'string') {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
+    const d = new Date(val);
+    if (!isNaN(d.getTime())) {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+    return val.slice(0, 10);
+  }
+  if (val instanceof Date && !isNaN(val.getTime())) {
+    const year = val.getFullYear();
+    const month = String(val.getMonth() + 1).padStart(2, '0');
+    const day = String(val.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  return String(val);
+}
 
 export default function MasterCalendarPage() {
   const [interviews, setInterviews] = useState(() => storageService.getInterviews());
@@ -27,7 +52,10 @@ export default function MasterCalendarPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState(null);
 
-  // Live PostgreSQL sync on mount and manual trigger
+  // Real-time synchronization hook (SSE)
+  const { lastUpdated, isConnected } = useRealtime();
+
+  // Live PostgreSQL sync on mount, manual trigger, or SSE broadcast
   const refreshLiveSchedule = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -46,13 +74,20 @@ export default function MasterCalendarPage() {
     }
   }, []);
 
+  // Fetch fresh data on mount
   useEffect(() => {
     refreshLiveSchedule();
   }, [refreshLiveSchedule]);
 
+  // Auto-refresh when SSE broadcast signals a schedule change
+  useEffect(() => {
+    refreshLiveSchedule();
+  }, [lastUpdated, refreshLiveSchedule]);
+
   // View state: 'month' | 'week' | 'day'
   const [viewMode, setViewMode] = useState('week');
-  const [currentDateIndex, setCurrentDateIndex] = useState(0); // offset from base date
+  // currentDateIndex: 0 = Current Week (Oct 26 - Nov 1, 2026), 1 = Placement Week (Nov 2 - Nov 8, 2026)
+  const [currentDateIndex, setCurrentDateIndex] = useState(0);
 
   // Filters
   const [roundFilter, setRoundFilter] = useState('all');
@@ -62,14 +97,17 @@ export default function MasterCalendarPage() {
   // Selected event modal
   const [selectedEvent, setSelectedEvent] = useState(null);
 
-  // Week days starting Nov 2, 2026 (matching Webster 2026 placement week)
-  const baseDate = new Date(2026, 10, 2 + currentDateIndex * 7);
+  // Week days starting Oct 26, 2026 (Mon of current operational week)
+  const baseDate = new Date(2026, 9, 26 + currentDateIndex * 7);
   const weekDays = Array.from({ length: 7 }).map((_, i) => {
     const d = new Date(baseDate);
     d.setDate(baseDate.getDate() + i);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
     return {
       dateObj: d,
-      dateString: d.toISOString().split('T')[0],
+      dateString: `${year}-${month}-${day}`,
       dayName: d.toLocaleDateString('en-US', { weekday: 'short' }),
       dayNumber: d.getDate(),
       monthName: d.toLocaleDateString('en-US', { month: 'short' })
@@ -78,39 +116,57 @@ export default function MasterCalendarPage() {
 
   const hours = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
 
-  // Filtered interviews
+  // Resilient filtered interviews
   const filteredInterviews = interviews.filter(int => {
-    const matchesRound = roundFilter === 'all' || int.roundType.toLowerCase() === roundFilter.toLowerCase();
-    const matchesInterviewer = interviewerFilter === 'all' || (int.interviewerNames || []).some(n => n.includes(interviewerFilter));
-    const matchesRoom = roomFilter === 'all' || (int.roomName || '').toLowerCase().includes(roomFilter.toLowerCase());
+    const roundType = (int.roundType || '').toLowerCase();
+    const matchesRound = roundFilter === 'all' || roundType.includes(roundFilter.toLowerCase());
+
+    const intvNames = Array.isArray(int.interviewerNames)
+      ? int.interviewerNames
+      : [int.interviewerNames || ''];
+    const matchesInterviewer = interviewerFilter === 'all' ||
+      intvNames.some(n => String(n).toLowerCase().includes(interviewerFilter.toLowerCase()));
+
+    const roomName = (int.roomName || '').toLowerCase();
+    const matchesRoom = roomFilter === 'all' || roomName.includes(roomFilter.toLowerCase());
+
     return matchesRound && matchesInterviewer && matchesRoom;
   });
 
   // Color tokens per round
   const getRoundEventClasses = (roundType) => {
-    switch (roundType) {
-      case 'Coding':
-        return 'bg-cyan-50 border-cyan-300 text-cyan-900 hover:bg-cyan-100';
-      case 'Technical':
-        return 'bg-indigo-50 border-indigo-300 text-indigo-900 hover:bg-indigo-100';
-      case 'HR':
-        return 'bg-violet-50 border-violet-300 text-violet-900 hover:bg-violet-100';
-      default:
-        return 'bg-slate-50 border-slate-300 text-slate-900 hover:bg-slate-100';
+    const r = (roundType || '').toLowerCase();
+    if (r.includes('coding')) {
+      return 'bg-cyan-50 border-cyan-300 text-cyan-900 hover:bg-cyan-100';
     }
+    if (r.includes('tech') || r.includes('system') || r.includes('arch')) {
+      return 'bg-indigo-50 border-indigo-300 text-indigo-900 hover:bg-indigo-100';
+    }
+    if (r.includes('hr') || r.includes('bar') || r.includes('fit') || r.includes('lead')) {
+      return 'bg-violet-50 border-violet-300 text-violet-900 hover:bg-violet-100';
+    }
+    return 'bg-slate-50 border-slate-300 text-slate-900 hover:bg-slate-100';
   };
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Master Schedule Calendar"
-        subtitle="Unified calendar across all candidate trial slots, interview faculty schedules, and room availability"
+        subtitle="Unified calendar across all candidate interview slots, interview faculty schedules, and room availability"
         breadcrumbs={[
           { label: 'Coordinator', to: '/coordinator' },
           { label: 'Master Calendar' }
         ]}
         actions={
           <div className="flex items-center gap-2">
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-full border ${
+              isConnected
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                : 'bg-amber-50 text-amber-700 border-amber-200'
+            }`}>
+              <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+              {isConnected ? 'Real-Time Sync Active' : 'Offline Mode'}
+            </span>
             {lastSyncTime && (
               <span className="text-[11px] font-mono text-slate-400 hidden sm:inline">
                 Synced at {lastSyncTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
@@ -131,31 +187,62 @@ export default function MasterCalendarPage() {
       {/* Calendar Controls & Filter Bar */}
       <div className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-subtle flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Navigation buttons */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 p-0.5">
             <button
               onClick={() => setCurrentDateIndex(prev => prev - 1)}
               className="p-1.5 rounded text-slate-500 hover:text-slate-800 hover:bg-white transition-colors"
+              title="Previous week"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               onClick={() => setCurrentDateIndex(0)}
-              className="px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-white rounded transition-colors"
+              className={`px-2.5 py-1 text-xs font-semibold rounded transition-colors ${
+                currentDateIndex === 0
+                  ? 'bg-white text-indigo-700 shadow-2xs font-bold'
+                  : 'text-slate-700 hover:bg-white'
+              }`}
+              title="Current week (Oct 26 - Nov 1)"
             >
               Today
             </button>
             <button
               onClick={() => setCurrentDateIndex(prev => prev + 1)}
               className="p-1.5 rounded text-slate-500 hover:text-slate-800 hover:bg-white transition-colors"
+              title="Next week"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
 
-          <span className="text-sm font-bold text-slate-900">
-            {weekDays[0].monthName} {weekDays[0].dayNumber} — {weekDays[6].monthName} {weekDays[6].dayNumber}, 2026
-          </span>
+          <button
+            onClick={() => setCurrentDateIndex(1)}
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all ${
+              currentDateIndex === 1
+                ? 'bg-purple-50 text-purple-700 border-purple-300 shadow-2xs'
+                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+            <span>Placement Week (Nov 2–8)</span>
+          </button>
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold text-slate-900">
+              {weekDays[0].monthName} {weekDays[0].dayNumber} — {weekDays[6].monthName} {weekDays[6].dayNumber}, {weekDays[0].dateObj.getFullYear()}
+            </span>
+            {currentDateIndex === 0 && (
+              <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                This Week
+              </span>
+            )}
+            {currentDateIndex === 1 && (
+              <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+                Placement Drive
+              </span>
+            )}
+          </div>
         </div>
 
         {/* View Mode & Filters */}
@@ -192,20 +279,24 @@ export default function MasterCalendarPage() {
             value={roundFilter}
             onChange={setRoundFilter}
             options={[
-              { value: 'coding', label: 'Coding' },
-              { value: 'technical', label: 'Technical' },
-              { value: 'hr', label: 'HR & Fit' },
+              { value: 'all', label: 'All Rounds' },
+              { value: 'coding', label: 'Coding Challenge' },
+              { value: 'technical', label: 'System Architecture' },
+              { value: 'hr', label: 'Leadership / Bar Raiser' },
             ]}
           />
 
           <FilterDropdown
-            label="Chamber"
+            label="Room"
             value={roomFilter}
             onChange={setRoomFilter}
             options={[
-              { value: 'alpha', label: 'Chamber Alpha' },
+              { value: 'all', label: 'All Rooms' },
+              { value: 'alpha', label: 'Room Alpha' },
+              { value: 'c-201', label: 'Room C-201' },
+              { value: 'c-202', label: 'Room C-202' },
+              { value: 'c-203', label: 'Room C-203' },
               { value: 'cloud', label: 'Virtual Cloud' },
-              { value: 'west', label: 'Pod West' },
             ]}
           />
         </div>
@@ -225,6 +316,9 @@ export default function MasterCalendarPage() {
         <span className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-violet-500" />
           Executive Bar Raiser & Cultural Fit
+        </span>
+        <span className="ml-auto text-[11px] font-mono text-slate-400">
+          Showing {filteredInterviews.length} total scheduled interview sessions
         </span>
       </div>
 
@@ -255,9 +349,12 @@ export default function MasterCalendarPage() {
 
                 {/* Day cells */}
                 {weekDays.map((d) => {
-                  const cellEvents = filteredInterviews.filter(
-                    int => int.date === d.dateString && int.startTime.startsWith(hour.split(':')[0])
-                  );
+                  const cellEvents = filteredInterviews.filter(int => {
+                    const intDate = normalizeDate(int.date);
+                    const intHour = (int.startTime || '').slice(0, 2);
+                    const cellHour = hour.slice(0, 2);
+                    return intDate === d.dateString && intHour === cellHour;
+                  });
 
                   return (
                     <div
@@ -278,7 +375,9 @@ export default function MasterCalendarPage() {
                           </div>
                           <div className="text-[10px] text-slate-600 truncate">{evt.roundTitle}</div>
                           <div className="text-[10px] text-slate-500 font-medium truncate mt-0.5">
-                            {evt.interviewerNames.join(', ')}
+                            {Array.isArray(evt.interviewerNames) && evt.interviewerNames.length > 0
+                              ? evt.interviewerNames.join(', ')
+                              : (typeof evt.interviewerNames === 'string' && evt.interviewerNames ? evt.interviewerNames : 'Assigned Faculty')}
                           </div>
                         </div>
                       ))}
@@ -291,35 +390,50 @@ export default function MasterCalendarPage() {
         </div>
       )}
 
-      {/* Month View Placeholder / Simplified Grid */}
+      {/* Month View */}
       {viewMode === 'month' && (
         <div className="bg-white rounded-2xl border border-slate-200/90 shadow-subtle p-6">
-          <h4 className="text-base font-bold text-slate-900 mb-4">Month Overview: October 2026</h4>
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-base font-bold text-slate-900">
+              Month Overview: {baseDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+            </h4>
+            <div className="text-xs text-slate-500 font-medium">
+              Click any active date card to jump straight into its weekly schedule
+            </div>
+          </div>
           <div className="grid grid-cols-7 gap-2 text-center text-xs">
             {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
               <div key={day} className="font-bold text-slate-400 py-2">{day}</div>
             ))}
-            {Array.from({ length: 31 }).map((_, i) => {
+            {Array.from({ length: new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 0).getDate() }).map((_, i) => {
               const dayNum = i + 1;
-              const dateStr = `2026-10-${String(dayNum).padStart(2, '0')}`;
-              const count = filteredInterviews.filter(int => int.date === dateStr).length;
+              const dateStr = `${baseDate.getFullYear()}-${String(baseDate.getMonth() + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+              const count = filteredInterviews.filter(int => normalizeDate(int.date) === dateStr).length;
 
               return (
                 <div
                   key={dayNum}
                   onClick={() => {
+                    const targetDate = new Date(baseDate.getFullYear(), baseDate.getMonth(), dayNum);
+                    const dayOfWeek = targetDate.getDay();
+                    const diffToMon = targetDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+                    const targetMon = new Date(baseDate.getFullYear(), baseDate.getMonth(), diffToMon);
+                    const refMon = new Date(2026, 9, 26);
+                    const diffWeeks = Math.round((targetMon - refMon) / (7 * 24 * 60 * 60 * 1000));
+                    setCurrentDateIndex(diffWeeks);
                     setViewMode('week');
-                    setCurrentDateIndex(Math.floor(i / 7) - 1);
                   }}
-                  className={`p-3 rounded-xl border transition-all cursor-pointer min-h-[70px] text-left flex flex-col justify-between ${
-                    count > 0 ? 'bg-indigo-50/50 border-indigo-200 hover:border-indigo-400' : 'bg-slate-50/50 border-slate-100 hover:bg-slate-100'
+                  className={`p-3 rounded-xl border transition-all cursor-pointer min-h-[72px] text-left flex flex-col justify-between ${
+                    count > 0 ? 'bg-indigo-50/60 border-indigo-200 hover:border-indigo-400 shadow-2xs' : 'bg-slate-50/50 border-slate-100 hover:bg-slate-100'
                   }`}
                 >
                   <span className="font-bold text-slate-700">{dayNum}</span>
-                  {count > 0 && (
-                    <span className="text-[10px] font-semibold bg-indigo-600 text-white px-1.5 py-0.5 rounded-md inline-block text-center">
-                      {count} Sessions
+                  {count > 0 ? (
+                    <span className="text-[10px] font-semibold bg-indigo-600 text-white px-1.5 py-0.5 rounded-md inline-block text-center shadow-xs">
+                      {count} {count === 1 ? 'Session' : 'Sessions'}
                     </span>
+                  ) : (
+                    <span className="text-[10px] text-slate-300 font-mono">—</span>
                   )}
                 </div>
               );
@@ -331,28 +445,46 @@ export default function MasterCalendarPage() {
       {/* Day View */}
       {viewMode === 'day' && (
         <div className="bg-white rounded-2xl border border-slate-200/90 shadow-subtle p-6">
-          <h4 className="text-base font-bold text-slate-900 mb-4">
-            Day Schedule: {weekDays[0].dayName}, {weekDays[0].monthName} {weekDays[0].dayNumber}, 2026
-          </h4>
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+            <h4 className="text-base font-bold text-slate-900">
+              Day Schedule: {weekDays[0].dayName}, {weekDays[0].monthName} {weekDays[0].dayNumber}, {weekDays[0].dateObj.getFullYear()}
+            </h4>
+            <span className="text-xs font-mono font-medium text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded border border-indigo-200">
+              {filteredInterviews.filter(int => normalizeDate(int.date) === weekDays[0].dateString).length} Sessions Today
+            </span>
+          </div>
           <div className="space-y-3">
             {filteredInterviews
-              .filter(int => int.date === weekDays[0].dateString)
+              .filter(int => normalizeDate(int.date) === weekDays[0].dateString)
               .map(evt => (
                 <div
                   key={evt.id}
                   onClick={() => setSelectedEvent(evt)}
-                  className={`p-4 rounded-xl border cursor-pointer ${getRoundEventClasses(evt.roundType)}`}
+                  className={`p-4 rounded-xl border cursor-pointer hover:shadow-sm transition-all ${getRoundEventClasses(evt.roundType)}`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <h5 className="font-bold text-sm">{evt.candidateName} — {evt.candidateRole}</h5>
-                    <span className="font-mono text-xs">{evt.startTime} - {evt.endTime}</span>
+                    <h5 className="font-bold text-sm text-slate-900">{evt.candidateName} — {evt.candidateRole}</h5>
+                    <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-white/70 border border-current">
+                      {evt.startTime} - {evt.endTime}
+                    </span>
                   </div>
-                  <div className="text-xs text-slate-600 mb-2">{evt.roundTitle} • Room: {evt.roomName}</div>
-                  <div className="text-xs text-slate-500">Interviewers: {evt.interviewerNames.join(', ')}</div>
+                  <div className="text-xs text-slate-600 mb-2">
+                    {evt.roundTitle} • Room: <span className="font-semibold text-slate-800">{evt.roomName}</span>
+                  </div>
+                  <div className="text-xs text-slate-500">
+                    Interviewers:{' '}
+                    <span className="font-medium text-slate-700">
+                      {Array.isArray(evt.interviewerNames) && evt.interviewerNames.length > 0
+                        ? evt.interviewerNames.join(', ')
+                        : (evt.interviewerNames || 'Assigned Faculty')}
+                    </span>
+                  </div>
                 </div>
               ))}
-            {filteredInterviews.filter(int => int.date === weekDays[0].dateString).length === 0 && (
-              <p className="text-xs text-slate-400 italic">No interviews scheduled for this date.</p>
+            {filteredInterviews.filter(int => normalizeDate(int.date) === weekDays[0].dateString).length === 0 && (
+              <div className="p-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200 text-xs text-slate-400">
+                No interviews scheduled for this date. Use the navigation buttons above or switch to Week view.
+              </div>
             )}
           </div>
         </div>
@@ -382,7 +514,7 @@ export default function MasterCalendarPage() {
                   <Clock className="w-3.5 h-3.5" /> Date & Time
                 </span>
                 <div className="font-bold text-slate-800 mt-1 font-mono text-xs">
-                  {selectedEvent.date}
+                  {normalizeDate(selectedEvent.date)}
                 </div>
                 <div className="text-indigo-600 font-mono font-medium text-xs mt-0.5">
                   {selectedEvent.startTime} - {selectedEvent.endTime} ({selectedEvent.duration})
@@ -401,13 +533,17 @@ export default function MasterCalendarPage() {
               <span className="text-[10px] uppercase font-semibold text-slate-400 flex items-center gap-1 mb-1">
                 <User className="w-3.5 h-3.5" /> Interview Panel Faculty
               </span>
-              <div className="font-semibold text-slate-900">{selectedEvent.interviewerNames.join(', ')}</div>
+              <div className="font-semibold text-slate-900">
+                {Array.isArray(selectedEvent.interviewerNames) && selectedEvent.interviewerNames.length > 0
+                  ? selectedEvent.interviewerNames.join(', ')
+                  : (selectedEvent.interviewerNames || 'Assigned Faculty')}
+              </div>
             </div>
 
             {selectedEvent.meetingUrl && (
               <div className="p-3 rounded-lg bg-indigo-50/80 border border-indigo-200 flex items-center justify-between">
                 <div>
-                  <span className="font-semibold text-indigo-950 block">WebRTC Virtual Hub Link</span>
+                  <span className="font-semibold text-indigo-950 block">Virtual Meeting Link</span>
                   <span className="text-[11px] text-indigo-700 font-mono">{selectedEvent.meetingUrl}</span>
                 </div>
                 <a
@@ -416,7 +552,7 @@ export default function MasterCalendarPage() {
                   rel="noreferrer"
                   className="px-3 py-1.5 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center gap-1 shadow-xs"
                 >
-                  <span>Launch Chamber</span>
+                  <span>Join Meeting</span>
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </div>

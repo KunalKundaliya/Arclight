@@ -261,13 +261,13 @@ async function seed() {
       {
         id: 'user-int-01',
         name: 'Priya Nair',
-        email: 'priya.nair@northstar.io',
+        email: 'priya.nair@apexdynamics.com',
         role: 'interviewer',
         roleTitle: 'Senior Engineering Panel Lead',
         avatar: 'PN',
         avatarBg: 'bg-violet-600',
-        department: 'Northstar Labs Engineering',
-        organization: 'Northstar Labs'
+        department: 'Apex Dynamics Engineering',
+        organization: 'Apex Dynamics'
       },
       {
         id: 'user-cand-01',

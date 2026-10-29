@@ -21,7 +21,7 @@ export default function CandidateNotificationsPage() {
     {
       id: 'cand-notif-3',
       title: 'Application Intake Received',
-      message: 'Your profile has been admitted into the Fall 2026 Engineering Crucible candidate pool.',
+      message: 'Your profile has been admitted into the Apex Dynamics · Fall 2026 candidate pool.',
       timestamp: '5 days ago',
       isRead: true
     }

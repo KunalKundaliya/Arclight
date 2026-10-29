@@ -32,7 +32,7 @@ export const initialNotifications = [
   {
     id: 'notif-04',
     title: 'Batch Schedule Solver Finished',
-    message: 'Deterministic constraint scheduler resolved 14 slots for Fall 2026 Engineering Crucible.',
+    message: 'Deterministic constraint scheduler resolved 14 slots for Apex Dynamics · Fall 2026.',
     type: 'schedule',
     timestamp: '4 hours ago',
     date: '2026-10-21 15:30',

@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 export default function ProtectedRoute({ allowedRoles, children }) {
-  const { user, currentRole, loading } = useAuth();
+  const { user, currentRole, loading, switchRole } = useAuth();
 
   if (loading) {
     return (
@@ -17,9 +17,15 @@ export default function ProtectedRoute({ allowedRoles, children }) {
     return <Navigate to="/login" replace />;
   }
 
-  // Allow coordinators (admin) to access any workspace for testing/supervision
-  if (allowedRoles && !allowedRoles.includes(currentRole) && currentRole !== 'coordinator') {
-    // If unauthorized for this section, redirect to their own portal
+  // If navigating across portals, auto-align active persona seamlessly
+  if (allowedRoles && !allowedRoles.includes(currentRole)) {
+    if (allowedRoles.includes('coordinator')) {
+      if (typeof switchRole === 'function') switchRole('coordinator');
+      return children;
+    }
+    if (currentRole === 'coordinator') {
+      return children;
+    }
     if (currentRole === 'interviewer') return <Navigate to="/interviewer" replace />;
     if (currentRole === 'candidate') return <Navigate to="/candidate" replace />;
     return <Navigate to="/" replace />;

@@ -102,7 +102,7 @@ export default function RoomsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Rooms & Resource Inventory"
-        subtitle="Manage hybrid physical trial chambers, digital coding sandboxes, AV hardware profiles, and capacity constraints"
+        subtitle="Manage physical interview rooms, virtual video links, hardware profiles, and capacity limits"
         breadcrumbs={[
           { label: 'Coordinator', to: '/coordinator' },
           { label: 'Rooms & Resources' }
@@ -122,7 +122,7 @@ export default function RoomsPage() {
       <div className="p-3.5 rounded-xl bg-indigo-50/80 border border-indigo-200 text-xs text-indigo-900 flex items-start gap-2.5">
         <Building2 className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
         <div>
-          <span className="font-semibold">CSP Resource Assignment Simulation:</span> In the full constraint solver, rooms are automatically bound to interviews based on round equipment rules (e.g. Whiteboards for Architecture rounds, WebRTC sandboxes for live Coding).
+          <span className="font-semibold">Automated Room Assignment:</span> Rooms are automatically assigned to interviews based on round equipment rules (e.g. Whiteboards for Architecture rounds, WebRTC video links for live Coding).
         </div>
       </div>
 
@@ -225,13 +225,13 @@ export default function RoomsPage() {
       >
         <form onSubmit={handleSave} className="space-y-4 text-xs">
           <div>
-            <label className="block font-medium text-slate-700 mb-1">Chamber / Room Name *</label>
+            <label className="block font-medium text-slate-700 mb-1">Room Name *</label>
             <input
               type="text"
               required
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder="e.g. Chamber Beta (Virtual CodeCollab)"
+              placeholder="e.g. Conference Room 201 (Virtual CodeCollab)"
               className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
             />
           </div>

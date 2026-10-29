@@ -71,7 +71,7 @@ export function generateAvailableSlotsForDate({
         (intv) => intv.date === date && intv.startTime === timeBlock.start && intv.roomId === room.id
       );
       return !roomOccupied;
-    }) || rooms[0] || { id: 'room-01', name: 'Chamber Alpha (Hybrid Nexus)' };
+    }) || rooms[0] || { id: 'room-01', name: 'Room Alpha (Boardroom)' };
 
     // Select the best matching faculty
     const primaryInterviewer = matchingInterviewers[0];
@@ -95,7 +95,7 @@ export function generateAvailableSlotsForDate({
   // ensure candidate always has verified slots using available rooms and first active faculty
   if (availableSlots.length === 0 && interviewers.length > 0) {
     const fallbackFaculty = interviewers[0];
-    const fallbackRoom = rooms[0] || { id: 'room-01', name: 'Virtual Cloud Chamber 1' };
+    const fallbackRoom = rooms[0] || { id: 'room-01', name: 'Virtual Meeting Room 1' };
 
     const fallbackHours = [
       { start: '10:00', end: '11:00' },

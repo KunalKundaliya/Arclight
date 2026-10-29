@@ -305,7 +305,7 @@ export default function CandidatesPage() {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         title={editingCandidate ? 'Edit Candidate Profile' : 'Add Candidate to Pool'}
-        subtitle="Candidate information for automated constraint matching"
+        subtitle="Candidate details for interview panel assignment and scheduling"
       >
         <form onSubmit={handleSave} className="space-y-4 text-xs">
           <div>
@@ -513,7 +513,7 @@ export default function CandidatesPage() {
         onClose={() => setCandidateToDelete(null)}
         onConfirm={handleDelete}
         title="Remove Candidate"
-        message={`Are you sure you want to remove ${candidateToDelete?.name} from the active talent pool? Any scheduled interviews will be desynchronized.`}
+        message={`Are you sure you want to remove ${candidateToDelete?.name} from the active talent pool? Any scheduled interview sessions for this candidate will be cancelled.`}
         confirmText="Remove Candidate"
         isDanger={true}
       />

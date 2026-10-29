@@ -37,7 +37,7 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Platform & Scheduling Settings"
-        subtitle="Configure organization metadata, default CSP constraint boundaries, buffer policies, and communication channels"
+        subtitle="Configure organization metadata, scheduling boundaries, buffer policies, and communication channels"
         breadcrumbs={[
           { label: 'Coordinator', to: '/coordinator' },
           { label: 'Settings' }
@@ -82,8 +82,8 @@ export default function SettingsPage() {
           <div className="flex items-center gap-2.5 pb-4 mb-5 border-b border-slate-100">
             <Sliders className="w-5 h-5 text-indigo-600" />
             <div>
-              <h3 className="text-base font-bold text-slate-900">CSP Scheduling Parameters & Thresholds</h3>
-              <p className="text-xs text-slate-500">Heuristic constraints used by the automated interview generator</p>
+              <h3 className="text-base font-bold text-slate-900">Automated Scheduling Rules & Thresholds</h3>
+              <p className="text-xs text-slate-500">Scheduling rules used by the automated interview generator</p>
             </div>
           </div>
 
@@ -201,7 +201,7 @@ export default function SettingsPage() {
               />
               <div>
                 <span className="font-semibold text-slate-800 block">Interviewer Panel Slack Reminders</span>
-                <span className="text-slate-500">Send direct notifications 10 minutes prior to trial session kick-off</span>
+                <span className="text-slate-500">Send direct notifications 10 minutes prior to interview session start</span>
               </div>
             </label>
           </div>

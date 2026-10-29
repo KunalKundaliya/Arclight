@@ -7,7 +7,7 @@ export default function InterviewerNotificationsPage() {
     {
       id: 'int-notif-1',
       title: 'Upcoming Session in 45 Minutes',
-      message: 'System Architecture round with Soren Vance begins at 10:00 AM in Virtual Chamber 1.',
+      message: 'System Architecture round with Soren Vance begins at 10:00 AM in Virtual Meeting Room 1.',
       timestamp: '15 mins ago',
       type: 'reminder'
     },
@@ -21,7 +21,7 @@ export default function InterviewerNotificationsPage() {
     {
       id: 'int-notif-3',
       title: 'Schedule Optimization Notice',
-      message: 'The CSP solver balanced panel distribution. Your Friday afternoon slot was released.',
+      message: 'The automated scheduler rebalanced panel distribution. Your Friday afternoon slot was released.',
       timestamp: '1 day ago',
       type: 'info'
     }

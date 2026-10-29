@@ -64,7 +64,7 @@ export default function CoordinatorDashboard() {
   // New Drive form state
   const [driveName, setDriveName] = useState('');
   const [driveRole, setDriveRole] = useState('');
-  const [driveCompany, setDriveCompany] = useState('Northstar Labs');
+  const [driveCompany, setDriveCompany] = useState('Apex Dynamics');
 
   // New Candidate form state
   const [candName, setCandName] = useState('');
@@ -185,7 +185,7 @@ export default function CoordinatorDashboard() {
             </p>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
               <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
-              {isConnected ? 'SSE Live Telemetry' : 'Reconnecting...'}
+              {isConnected ? 'Live Sync Active' : 'Connecting...'}
             </span>
             {lastEvent && (
               <span className="text-[10px] text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-md font-mono hidden md:inline">
@@ -229,7 +229,7 @@ export default function CoordinatorDashboard() {
 
         {/* Card 2 */}
         <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs flex flex-col justify-between hover:shadow-card transition-all">
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Candidates in Northstar</span>
+          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Candidates in Apex Drive</span>
           <div className="mt-4">
             <span className="text-3xl font-extrabold tracking-tight text-slate-900">
               {candidates.length}
@@ -249,7 +249,7 @@ export default function CoordinatorDashboard() {
             </span>
           </div>
           <div className="mt-3 text-xs font-medium text-emerald-600">
-            Across {interviewers.length} panels · {new Set(interviews.map(i => i.roomName).filter(Boolean)).size || 6} chambers
+            Across {interviewers.length} panels · {new Set(interviews.map(i => i.roomName).filter(Boolean)).size || 6} rooms
           </div>
         </div>
 
@@ -294,7 +294,7 @@ export default function CoordinatorDashboard() {
             <div>
               <h3 className="text-base font-bold text-slate-900">Your placement week</h3>
               <p className="text-xs text-slate-400 mt-0.5">
-                Northstar Labs · November 2–6 · Asia/Kolkata
+                Apex Dynamics · November 2–6 · Asia/Kolkata
               </p>
             </div>
             {/* Open calendar: distinct destination to /coordinator/calendar */}

@@ -24,8 +24,22 @@ import { validateScheduleBatch } from './ConstraintValidator.js';
  */
 export function normalizeDate(val) {
   if (!val) return '';
-  if (val instanceof Date) {
-    return val.toISOString().split('T')[0];
+  if (typeof val === 'string') {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
+    const d = new Date(val);
+    if (!isNaN(d.getTime())) {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+    return val.split('T')[0];
+  }
+  if (val instanceof Date && !isNaN(val.getTime())) {
+    const year = val.getFullYear();
+    const month = String(val.getMonth() + 1).padStart(2, '0');
+    const day = String(val.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
   return String(val).split('T')[0];
 }
@@ -506,9 +520,9 @@ export class SchedulePersistenceService {
         const notifTitle = 'Recruitment Schedule Applied';
         const notifMessage = `Confirmed and safely locked ${assignments.length} interview sessions for drive "${driveId}".`;
         await client.query(
-          `INSERT INTO notifications (id, title, message, type, read)
-           VALUES ($1, $2, $3, $4, $5)`,
-          [notifId, notifTitle, notifMessage, 'success', false]
+          `INSERT INTO notifications (id, title, message, description, type, read)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [notifId, notifTitle, notifMessage, notifMessage, 'success', false]
         );
       }
 
@@ -659,11 +673,12 @@ export class SchedulePersistenceService {
       // 5. Insert notification
       const notifId = `notif-${Date.now()}`;
       await client.query(
-        `INSERT INTO notifications (id, title, message, type, read)
-         VALUES ($1, $2, $3, $4, $5)`,
+        `INSERT INTO notifications (id, title, message, description, type, read)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
         [
           notifId,
           'Recruitment Schedule Rolled Back',
+          `Rolled back ${targetInterviews.length} sessions for drive "${driveId}". Reason: ${reason}`,
           `Rolled back ${targetInterviews.length} sessions for drive "${driveId}". Reason: ${reason}`,
           'warning',
           false
@@ -996,17 +1011,20 @@ class InMemoryTransactionalClient {
 
     // --- INSERT INTO notifications ---
     if (upper.startsWith('INSERT INTO NOTIFICATIONS')) {
-      let notifType = params[3] || 'info';
-      if (!params[3]) {
+      const is6Param = params.length >= 6;
+      let notifType = (is6Param ? params[4] : params[3]) || 'info';
+      if (!notifType || notifType.includes(' ')) {
         if (upper.includes("'SUCCESS'")) notifType = 'success';
         else if (upper.includes("'WARNING'")) notifType = 'warning';
+        else notifType = 'info';
       }
       const notifObj = {
         id: params[0],
         title: params[1],
         message: params[2],
+        description: is6Param ? params[3] : params[2],
         type: notifType,
-        read: params[4] !== undefined ? params[4] : false
+        read: (is6Param ? params[5] : params[4]) !== undefined ? (is6Param ? params[5] : params[4]) : false
       };
       this.pool.tables.notifications.push(notifObj);
       return { rowCount: 1, rows: [notifObj] };

@@ -35,8 +35,8 @@ export default function InterviewerDashboard() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Interviewer Evaluation Terminal"
-        subtitle={`Welcome, Dr. Evelyn Voss. You have ${myInterviews.length} active sessions assigned in the Fall 2026 Engineering Crucible.`}
+        title="Interviewer Dashboard"
+        subtitle={`Welcome, Dr. Evelyn Voss. You have ${myInterviews.length} active sessions assigned in the Fall 2026 Webster Placement Drive.`}
         actions={
           <div className="flex items-center gap-2">
             <Link
@@ -130,7 +130,7 @@ export default function InterviewerDashboard() {
         <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/90 shadow-subtle p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-base font-bold text-slate-900">Your Assigned Interview Crucible Sessions</h3>
+              <h3 className="text-base font-bold text-slate-900">Your Assigned Interview Sessions</h3>
               <p className="text-xs text-slate-500">Upcoming live coding assessments and system architecture panels</p>
             </div>
             <span className="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
@@ -169,7 +169,7 @@ export default function InterviewerDashboard() {
                       to={`/interviewer/interviews/${session.id}`}
                       className="text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1"
                     >
-                      <span>Directives</span>
+                      <span>Details</span>
                       <ArrowRight className="w-3 h-3" />
                     </Link>
                     <Link
@@ -185,10 +185,10 @@ export default function InterviewerDashboard() {
           </div>
         </div>
 
-        {/* Side Panel: Interviewer Directives & Faculty Profile */}
+        {/* Side Panel: Assessment Guidelines & Faculty Profile */}
         <div className="space-y-6">
           <div className="bg-white rounded-2xl border border-slate-200/90 shadow-subtle p-6">
-            <h4 className="text-sm font-bold text-slate-900 mb-2">Crucible Assessment Guidelines</h4>
+            <h4 className="text-sm font-bold text-slate-900 mb-2">Technical Assessment Guidelines</h4>
             <ul className="space-y-2.5 text-xs text-slate-600">
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />

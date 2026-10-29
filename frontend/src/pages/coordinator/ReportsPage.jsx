@@ -56,6 +56,7 @@ export default function ReportsPage() {
       totalCompleted: 38,
       completionRate: '95.2%',
       activeDrives: 4,
+      candidatesInApex: 48,
       candidatesInNorthstar: 48,
       averageDurationMins: 45,
       interviewerSatisfaction: '4.9 / 5.0'
@@ -261,7 +262,7 @@ export default function ReportsPage() {
         <div className="bg-white rounded-xl border border-slate-200/90 shadow-subtle p-5 flex flex-col justify-between">
           <div>
             <h3 className="text-base font-bold text-slate-900 mb-1">Stage Progression</h3>
-            <p className="text-xs text-slate-500 mb-4">Conversion rates through the crucible pipeline</p>
+            <p className="text-xs text-slate-500 mb-4">Conversion rates through the placement pipeline</p>
 
             <div className="space-y-3 text-xs">
               {roundFunnel.map((item) => (
@@ -280,7 +281,7 @@ export default function ReportsPage() {
           </div>
 
           <div className="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-400 font-mono text-center">
-            Calculated over {kpis.candidatesInNorthstar || 48} Candidates
+            Calculated over {kpis.candidatesInApex || kpis.candidatesInNorthstar || 48} Candidates
           </div>
         </div>
       </div>

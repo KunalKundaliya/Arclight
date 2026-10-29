@@ -267,7 +267,7 @@ export default function InterviewersPage() {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         title={editingInterviewer ? 'Edit Interviewer Profile' : 'Add Interviewer to Panel'}
-        subtitle="Configure skills and scheduling availability rules for the CSP solver"
+        subtitle="Configure skills and scheduling availability rules for automated matching"
       >
         <form onSubmit={handleSave} className="space-y-4 text-xs">
           <div>

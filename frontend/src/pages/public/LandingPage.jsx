@@ -361,7 +361,7 @@ export default function LandingPage() {
             </span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-            Designed for constraint-satisfaction recruitment
+            Designed for high-stakes recruitment drives
           </h2>
           <p className="text-base text-slate-500 leading-relaxed">
             Purpose-built tools to solve multi-panel conflicts, high-volume applicant routing, and interview coordination.
@@ -376,7 +376,7 @@ export default function LandingPage() {
             </div>
             <h3 className="text-lg font-bold text-slate-900">Automated Scheduling</h3>
             <p className="text-sm text-slate-500 leading-relaxed">
-              Deterministic constraint-satisfaction engine assigns candidates to interviewer panels and rooms based on availability, daily caps, and skill sets.
+              Intelligent scheduling engine assigns candidates to interviewer panels and rooms based on availability, daily caps, and skill sets.
             </p>
           </div>
 
@@ -387,7 +387,7 @@ export default function LandingPage() {
             </div>
             <h3 className="text-lg font-bold text-slate-900">Conflict Detection</h3>
             <p className="text-sm text-slate-500 leading-relaxed">
-              Instant alerts pinpoint interviewer schedule overlaps, double-booked chambers, capacity shortages, and applicant unavailability before publication.
+              Instant alerts pinpoint interviewer schedule overlaps, double-booked rooms, capacity shortages, and applicant unavailability before publication.
             </p>
           </div>
 
@@ -398,7 +398,7 @@ export default function LandingPage() {
             </div>
             <h3 className="text-lg font-bold text-slate-900">Candidate Self-Booking</h3>
             <p className="text-sm text-slate-500 leading-relaxed">
-              Empower applicants to choose verified conflict-free interview slots with instant calendar synchronization, meeting links, and preparation directives.
+              Empower applicants to choose verified conflict-free interview slots with instant calendar synchronization, meeting links, and preparation guidelines.
             </p>
           </div>
 
@@ -449,7 +449,7 @@ export default function LandingPage() {
             How Arclight Works
           </h2>
           <p className="text-base text-slate-500 leading-relaxed">
-            A three-step deterministic system to replace endless spreadsheet coordination.
+            A modern three-step system to replace endless spreadsheet coordination.
           </p>
         </div>
 
@@ -459,7 +459,7 @@ export default function LandingPage() {
             <div className="w-9 h-9 rounded-xl bg-[#0f172a] text-white flex items-center justify-center font-bold text-sm">
               1
             </div>
-            <h3 className="text-lg font-bold text-slate-900">Define Constraints & Panels</h3>
+            <h3 className="text-lg font-bold text-slate-900">Set Rules & Panels</h3>
             <p className="text-sm text-slate-500 leading-relaxed">
               Configure recruitment drives, interviewer availability, maximum daily interviews, room capacities, and buffer intervals.
             </p>
@@ -470,9 +470,9 @@ export default function LandingPage() {
             <div className="w-9 h-9 rounded-xl bg-[#6366f1] text-white flex items-center justify-center font-bold text-sm shadow-sm shadow-indigo-500/30">
               2
             </div>
-            <h3 className="text-lg font-bold text-slate-900">Intelligent CSP Solving</h3>
+            <h3 className="text-lg font-bold text-slate-900">Intelligent Automated Scheduling</h3>
             <p className="text-sm text-slate-500 leading-relaxed">
-              The automated solver evaluates millions of candidate-interviewer pairings to generate zero-overlap schedules and highlight bottlenecks.
+              The automated engine evaluates candidate-interviewer pairings to generate zero-overlap schedules and highlight bottlenecks.
             </p>
           </div>
 
@@ -495,7 +495,7 @@ export default function LandingPage() {
           Ready to eliminate calendar chaos in recruitment?
         </h2>
         <p className="text-base sm:text-lg text-indigo-200/90 max-w-xl mx-auto font-normal leading-relaxed">
-          Experience automated constraint-satisfaction scheduling built for university placements and high-volume recruiting drives.
+          Experience intelligent conflict-free scheduling built for enterprise hiring and university placement drives.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
           <Link

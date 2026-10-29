@@ -22,7 +22,7 @@ export default function RecruitmentDrivesPage() {
   // Form State
   const [form, setForm] = useState({
     name: '',
-    company: 'Nexus Quantum Labs',
+    company: 'Apex Dynamics',
     role: '',
     startDate: '2026-10-25',
     endDate: '2026-11-20',
@@ -36,7 +36,7 @@ export default function RecruitmentDrivesPage() {
     setEditingDrive(null);
     setForm({
       name: '',
-      company: 'Nexus Quantum Labs',
+      company: 'Apex Dynamics',
       role: '',
       startDate: '2026-10-25',
       endDate: '2026-11-20',

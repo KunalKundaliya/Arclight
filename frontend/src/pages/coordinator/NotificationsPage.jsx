@@ -80,8 +80,8 @@ export default function NotificationsPage() {
         case 'SCHEDULE_REPAIRED':
           return {
             id: `notif-live-${Date.now()}`,
-            title: evt.payload?.type === 'ROOM_OUTAGE' ? 'Chamber Outage Repaired' : 'Faculty Callout Repaired',
-            message: `Minimal-displacement repair completed: ${evt.payload?.displacedCount || 0} sessions migrated safely.`,
+            title: evt.payload?.type === 'ROOM_OUTAGE' ? 'Room Outage Repaired' : 'Faculty Callout Repaired',
+            message: `Emergency schedule repair completed: ${evt.payload?.displacedCount || 0} sessions reassigned safely.`,
             type: 'conflict',
             timestamp: 'Just now',
             date: nowIso,
@@ -151,7 +151,7 @@ export default function NotificationsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Notifications & System Logs"
-        subtitle="Automated alerts for candidate self-bookings, CSP solver runs, double-booking warnings, and pending scorecards"
+        subtitle="Automated alerts for candidate self-bookings, schedule updates, conflict warnings, and pending scorecards"
         breadcrumbs={[
           { label: 'Coordinator', to: '/coordinator' },
           { label: 'Notifications' }
@@ -160,7 +160,7 @@ export default function NotificationsPage() {
           <div className="flex items-center gap-2.5">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
               <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
-              {isConnected ? 'SSE Live Feed' : 'Reconnecting...'}
+              {isConnected ? 'Live Activity Feed' : 'Reconnecting...'}
             </span>
 
             <button
