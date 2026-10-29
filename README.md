@@ -152,3 +152,17 @@ Switch between personas using the top-right profile avatar or on the `/login` sc
 3. **Candidate Portal (`/candidate`)**
    * Persona: **Aanya Shah** (Software Engineering Applicant)
    * Capabilities: Conflict-free self-booking, room join links, stage progression tracker.
+
+---
+
+## 👥 Team & Contributor Division (3 Core Pillars)
+
+The codebase is modularly divided across 3 specialized engineering tracks. For complete file-by-file ownership and GitHub setup, see [CONTRIBUTORS.md](file:///d:/arcLight/CONTRIBUTORS.md):
+
+1. **🎨 Contributor 1 — Frontend Lead** (`frontend/**`)
+   - 27+ responsive role pages, React 19 architecture, Tailwind design tokens, real-time client state & notifications.
+2. **⚙️ Contributor 2 — Backend & Database Lead** (`backend/**` excluding scheduler engine)
+   - Node/Express REST API, PostgreSQL relational schema, JWT RBAC security, Server-Sent Events (SSE) telemetry.
+3. **🧠 Contributor 3 — Algorithm & Optimization Lead** (`backend/src/services/scheduler/**`)
+   - Deterministic CSP solver (MRV, LCV, Forward Checking), soft constraint optimizer, dynamic rescheduling repair engine, and formal mathematical test suites.
+

@@ -1,0 +1,27 @@
+# GitHub CODEOWNERS File
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+# Replace @contributor_username with your actual GitHub usernames
+
+# Default fallback
+* @KunalKundaliya
+
+# 🎨 Contributor 1: Frontend Lead
+/frontend/ @frontend_contributor
+/frontend/src/ @frontend_contributor
+/frontend/src/pages/ @frontend_contributor
+/frontend/src/components/ @frontend_contributor
+/frontend/src/layouts/ @frontend_contributor
+/frontend/src/context/ @frontend_contributor
+
+# ⚙️ Contributor 2: Backend & Database Lead
+/backend/server.js @backend_contributor
+/backend/src/db/ @backend_contributor
+/backend/src/routes/ @backend_contributor
+/backend/src/controllers/ @backend_contributor
+/backend/src/middleware/ @backend_contributor
+/backend/src/services/dbService.js @backend_contributor
+/backend/src/services/eventHub.js @backend_contributor
+
+# 🧠 Contributor 3: Algorithm & Optimization Lead
+/backend/src/services/scheduler/ @algorithm_contributor
+/backend/src/services/schedulerEngine.js @algorithm_contributor
