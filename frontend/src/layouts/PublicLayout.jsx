@@ -44,6 +44,12 @@ export default function PublicLayout() {
               Sign in
             </Link>
             <Link
+              to="/signup"
+              className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors px-3 py-1.5 rounded-xl border border-indigo-200 bg-indigo-50/60 hover:bg-indigo-100/60 shadow-2xs"
+            >
+              Sign up
+            </Link>
+            <Link
               to="/coordinator"
               className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-[#6366f1] hover:bg-[#4f46e5] rounded-xl shadow-xs transition-all hover:translate-y-[-0.5px]"
             >

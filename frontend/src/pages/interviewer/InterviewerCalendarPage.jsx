@@ -5,10 +5,12 @@ import StatusBadge from '../../components/common/StatusBadge';
 import { storageService } from '../../services/storageService';
 import { apiClient } from '../../services/apiClient';
 import { useRealtime } from '../../context/RealtimeContext';
+import { useAuth } from '../../context/AuthContext';
 import { normalizeDate } from '../coordinator/MasterCalendarPage';
 import { Link } from 'react-router-dom';
 
 export default function InterviewerCalendarPage() {
+  const { user } = useAuth();
   const [interviews, setInterviews] = useState(() => storageService.getInterviews());
   const [isLoading, setIsLoading] = useState(false);
   const { lastUpdated } = useRealtime();
@@ -33,10 +35,18 @@ export default function InterviewerCalendarPage() {
     fetchLiveInterviews();
   }, [lastUpdated, fetchLiveInterviews]);
 
+  const isDemo = !user || user.email === 'priya.nair@apexdynamics.com' || user.id === 'usr-int-1';
+
   const myInterviews = interviews.filter(i => {
     const ids = Array.isArray(i.interviewerIds) ? i.interviewerIds : [i.interviewerIds || ''];
     const names = Array.isArray(i.interviewerNames) ? i.interviewerNames : [i.interviewerNames || ''];
-    return ids.includes('int-01') || names.some(n => String(n).toLowerCase().includes('voss') || String(n).toLowerCase().includes('priya'));
+    if (isDemo) {
+      return ids.includes('int-01') || ids.includes('usr-int-1') || names.some(n => String(n).toLowerCase().includes('voss') || String(n).toLowerCase().includes('priya'));
+    }
+    const idMatch = user?.id && ids.includes(user.id);
+    const nameMatch = user?.name && names.some(n => String(n).toLowerCase() === user.name.toLowerCase());
+    const emailMatch = user?.email && (i.interviewerEmail === user.email || (i.interviewerEmails || []).includes(user.email));
+    return idMatch || nameMatch || emailMatch;
   });
 
   return (

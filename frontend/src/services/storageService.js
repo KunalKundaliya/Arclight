@@ -255,6 +255,94 @@ export const storageService = {
     return updated;
   },
 
+  // Offline / Cache registration fallback with automatic domain cascading
+  registerLocalUser(userData) {
+    const nameParts = (userData.name || '').trim().split(/\s+/);
+    const initials = nameParts.length > 1
+      ? (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
+      : (userData.name || 'U').slice(0, 2).toUpperCase();
+
+    const avatarBg = userData.role === 'coordinator'
+      ? 'bg-indigo-600'
+      : userData.role === 'interviewer'
+      ? 'bg-violet-600'
+      : 'bg-emerald-600';
+
+    const userId = `usr-${userData.role.slice(0, 4)}-${Date.now()}`;
+    const safeUser = {
+      id: userId,
+      name: userData.name,
+      email: userData.email,
+      role: userData.role,
+      roleTitle: userData.role === 'coordinator'
+        ? 'Placement Coordinator'
+        : userData.role === 'interviewer'
+        ? (userData.title || 'Technical Panel Evaluator')
+        : `Candidate — ${userData.appliedRole || 'Software Development Engineer'}`,
+      avatar: initials,
+      avatarBg,
+      department: userData.department || 'Engineering',
+      organization: userData.organization || 'Webster University'
+    };
+
+    if (userData.role === 'candidate') {
+      const candidates = this.getCandidates();
+      const cand = {
+        id: `cand-${Date.now()}`,
+        name: userData.name,
+        email: userData.email,
+        phone: userData.phone || '',
+        appliedRole: userData.appliedRole || 'Software Development Engineer',
+        driveId: 'drv-101',
+        skills: Array.isArray(userData.skills)
+          ? userData.skills
+          : (typeof userData.skills === 'string' && userData.skills.trim()
+              ? userData.skills.split(',').map(s => s.trim()).filter(Boolean)
+              : ['Algorithms', 'Data Structures', 'JavaScript', 'React']),
+        currentRound: 'Technical Screen · R1',
+        stage: 'Technical',
+        status: 'Scheduled',
+        score: 85,
+        avatarBg,
+        initials,
+        appliedDate: new Date().toISOString().split('T')[0],
+        notes: 'Self-registered candidate via ArcLight portal'
+      };
+      candidates.unshift(cand);
+      save(STORAGE_KEYS.CANDIDATES, candidates);
+    } else if (userData.role === 'interviewer') {
+      const interviewers = this.getInterviewers();
+      const interviewer = {
+        id: `int-${Date.now()}`,
+        name: userData.name,
+        email: userData.email,
+        title: userData.title || 'Technical Panel Evaluator',
+        department: userData.department || 'Engineering',
+        skills: Array.isArray(userData.skills)
+          ? userData.skills
+          : (typeof userData.skills === 'string' && userData.skills.trim()
+              ? userData.skills.split(',').map(s => s.trim()).filter(Boolean)
+              : ['System Architecture', 'Coding Challenge', 'Algorithmic Problem Solving']),
+        maxInterviewsPerDay: Number(userData.maxInterviewsPerDay) || 3,
+        assignedInterviews: 0,
+        rating: 5.0,
+        status: 'Available',
+        avatarBg,
+        initials,
+        availabilitySummary: 'Mon, Wed, Fri (09:00 - 16:00)',
+        weeklyAvailability: {
+          Monday: ['09:00', '10:00', '11:00', '14:00', '15:00'],
+          Wednesday: ['09:00', '10:00', '11:00', '14:00', '15:00'],
+          Friday: ['09:00', '10:00', '11:00', '14:00', '15:00']
+        }
+      };
+      interviewers.unshift(interviewer);
+      save(STORAGE_KEYS.INTERVIEWERS, interviewers);
+    }
+
+    return safeUser;
+  },
+
   // Reset to default mock data
   resetAll() {
     localStorage.clear();

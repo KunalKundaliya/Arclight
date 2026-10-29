@@ -15,6 +15,7 @@ import CandidateLayout from './layouts/CandidateLayout';
 // Public Pages
 import LandingPage from './pages/public/LandingPage';
 import LoginPage from './pages/public/LoginPage';
+import SignUpPage from './pages/public/SignUpPage';
 
 // Coordinator Pages
 import CoordinatorDashboard from './pages/coordinator/CoordinatorDashboard';
@@ -79,6 +80,7 @@ export default function App() {
             <Route path="/" element={<PublicLayout />}>
               <Route index element={<LandingPage />} />
               <Route path="login" element={<LoginPage />} />
+              <Route path="signup" element={<SignUpPage />} />
             </Route>
 
             {/* Coordinator Workspace Routes */}

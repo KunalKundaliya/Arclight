@@ -25,18 +25,33 @@ export default function InterviewerDashboard() {
   const [interviews] = useState(() => storageService.getInterviews());
   const [evaluations] = useState(() => storageService.getEvaluations());
 
-  // Filter interviews assigned to Dr. Evelyn Voss ('int-01')
-  const myInterviews = interviews.filter(i =>
-    (i.interviewerIds || []).includes('int-01') || (i.interviewerNames || []).some(n => n.includes('Voss'))
-  );
+  const isDemoInterviewer = !user || user.email === 'priya.nair@apexdynamics.com' || user.id === 'usr-int-1';
+
+  // Dynamic filter: only show sessions specifically assigned to this interviewer
+  const myInterviews = interviews.filter(i => {
+    const ids = Array.isArray(i.interviewerIds) ? i.interviewerIds : [i.interviewerIds || ''];
+    const names = Array.isArray(i.interviewerNames) ? i.interviewerNames : [i.interviewerNames || ''];
+
+    if (isDemoInterviewer) {
+      return ids.includes('int-01') || ids.includes('usr-int-1') || names.some(n => String(n).toLowerCase().includes('priya') || String(n).toLowerCase().includes('voss'));
+    }
+
+    const idMatch = user?.id && ids.includes(user.id);
+    const nameMatch = user?.name && names.some(n => String(n).toLowerCase() === user.name.toLowerCase());
+    const emailMatch = user?.email && (i.interviewerEmail === user.email || (i.interviewerEmails || []).includes(user.email));
+
+    return idMatch || nameMatch || emailMatch;
+  });
 
   const pendingEvaluations = myInterviews.filter(i => i.evaluationStatus === 'Pending' || i.evaluationStatus === 'Draft');
+
+  const displayName = user?.name || 'Evaluator';
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Interviewer Dashboard"
-        subtitle={`Welcome, Dr. Evelyn Voss. You have ${myInterviews.length} active sessions assigned in the Fall 2026 Webster Placement Drive.`}
+        subtitle={`Welcome, ${displayName}. You have ${myInterviews.length} active sessions assigned in the Northstar Labs Placement Drive.`}
         actions={
           <div className="flex items-center gap-2">
             <Link
@@ -69,7 +84,7 @@ export default function InterviewerDashboard() {
                 Scorecard Action Required ({pendingEvaluations.length} Pending)
               </h4>
               <p className="text-amber-800 mt-0.5">
-                Elena Rostova's Executive Leadership session completed. Please submit your standardized rubric assessment.
+                {pendingEvaluations[0]?.candidateName || 'Candidate'}'s session completed. Please submit your standardized rubric assessment.
               </p>
             </div>
           </div>
@@ -88,8 +103,8 @@ export default function InterviewerDashboard() {
         <StatCard
           title="Total Assigned Sessions"
           value={myInterviews.length}
-          change="3 this week"
-          changeType="positive"
+          change={myInterviews.length > 0 ? `${myInterviews.length} this week` : "0 sessions"}
+          changeType={myInterviews.length > 0 ? "positive" : "neutral"}
           icon={Calendar}
           iconColor="text-indigo-600 bg-indigo-50 border-indigo-100"
           description="Within daily capacity cap (3/day)"
@@ -101,7 +116,7 @@ export default function InterviewerDashboard() {
           changeType={pendingEvaluations.length > 0 ? "negative" : "positive"}
           icon={ClipboardCheck}
           iconColor="text-amber-600 bg-amber-50 border-amber-100"
-          description="Average submission time: 4 hrs"
+          description={pendingEvaluations.length > 0 ? "Average submission time: 4 hrs" : "No pending evaluations"}
         />
         <StatCard
           title="Weekly Availability"
@@ -115,12 +130,12 @@ export default function InterviewerDashboard() {
         />
         <StatCard
           title="Evaluator Quality Rating"
-          value="4.9 / 5.0"
-          change="Top 5%"
+          value="5.0 / 5.0"
+          change="Verified"
           changeType="positive"
           icon={Star}
           iconColor="text-amber-600 bg-amber-50 border-amber-100"
-          description="Candidate experience benchmark"
+          description="Faculty experience benchmark"
         />
       </div>
 
@@ -182,6 +197,24 @@ export default function InterviewerDashboard() {
                 </div>
               </div>
             ))}
+
+            {myInterviews.length === 0 && (
+              <div className="p-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200 text-xs text-slate-500 space-y-2">
+                <p className="font-semibold text-slate-700">No interview sessions assigned yet</p>
+                <p className="text-slate-400 max-w-sm mx-auto">
+                  Coordinators will assign candidates to your panel during schedule generation. Make sure your weekly availability is set up.
+                </p>
+                <div className="pt-2">
+                  <Link
+                    to="/interviewer/availability"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
+                  >
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>Set Weekly Availability</span>
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

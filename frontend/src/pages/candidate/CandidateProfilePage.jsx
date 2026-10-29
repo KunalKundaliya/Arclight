@@ -2,10 +2,28 @@ import React from 'react';
 import { User, Mail, Phone, Award, CheckCircle2, FileText, Briefcase } from 'lucide-react';
 import PageHeader from '../../components/common/PageHeader';
 import { storageService } from '../../services/storageService';
+import { useAuth } from '../../context/AuthContext';
 
 export default function CandidateProfilePage() {
+  const { user } = useAuth();
   const candidates = storageService.getCandidates();
-  const candidate = candidates.find(c => c.id === 'cand-01') || candidates[0];
+  const isDemo = !user || user.email === 'aanya.shah@example.com' || user.id === 'cand-01';
+  const candidate = (isDemo
+    ? candidates.find(c => c.id === 'cand-01')
+    : candidates.find(c =>
+        (user?.id && c.id === user.id) ||
+        (user?.email && c.email?.toLowerCase() === user.email.toLowerCase()) ||
+        (user?.name && c.name?.toLowerCase() === user.name.toLowerCase())
+      )) || {
+        name: user?.name || 'Candidate',
+        email: user?.email || '',
+        phone: user?.phone || '+1 (555) 019-2834',
+        appliedRole: user?.roleTitle?.replace('Candidate — ', '') || 'Software Development Engineer',
+        score: 85,
+        initials: user?.avatar || (user?.name ? user.name.slice(0, 2).toUpperCase() : 'CA'),
+        skills: ['React', 'Node.js', 'System Architecture', 'Algorithms', 'TypeScript'],
+        notes: 'Profile registered and active for the recruitment cycle.'
+      };
 
   return (
     <div className="space-y-6">
@@ -48,8 +66,8 @@ export default function CandidateProfilePage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
           <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
             <span className="text-[10px] text-slate-400 uppercase font-semibold block">Target Recruitment Drive</span>
-            <div className="font-bold text-slate-900 text-sm mt-1">Apex Dynamics · Fall 2026</div>
-            <div className="text-slate-500 mt-1">Apex Dynamics • Distributed Systems Track</div>
+            <div className="font-bold text-slate-900 text-sm mt-1">Northstar Labs · Fall 2026</div>
+            <div className="text-slate-500 mt-1">Northstar Labs • Distributed Systems Track</div>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">

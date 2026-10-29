@@ -39,11 +39,17 @@ export const apiClient = {
   checkHealth() {
     return request('/health');
   },
-    // Auth API
+  // Auth API
   login(credentials) {
     return request('/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
+    });
+  },
+  register(userData) {
+    return request('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(userData),
     });
   },
   getMe() {

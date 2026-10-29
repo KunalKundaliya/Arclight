@@ -205,7 +205,15 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-4 pt-4 border-t border-slate-100 text-center">
+          <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+            <span className="text-slate-500">Don't have an account yet?</span>
+            <Link to="/signup" className="font-semibold text-[#4f46e5] hover:underline flex items-center gap-1">
+              <span>Sign Up here</span>
+              <span>→</span>
+            </Link>
+          </div>
+
+          <div className="mt-3 text-center">
             <Link to="/" className="text-xs text-slate-400 hover:text-[#4f46e5] transition-colors">
               ← Return to ArcLight Home
             </Link>
@@ -213,7 +221,7 @@ export default function LoginPage() {
         </div>
 
         <p className="mt-4 text-center text-[11px] text-slate-400">
-          A visual product concept. Simulated AI solving and mocked calendar integration.
+          Webster 2026 Campus Placement Portal · Secure Role-Based Authentication
         </p>
       </div>
     </div>

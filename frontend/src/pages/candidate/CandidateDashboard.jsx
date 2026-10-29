@@ -34,15 +34,31 @@ export default function CandidateDashboard() {
     setInterviews(storageService.getInterviews());
   }, [lastUpdated]);
 
-  // Logged in candidate (Aanya Shah) or primary candidate
-  const activeName = user?.name || 'Aanya Shah';
-  const candidate = candidates.find(c => c.id === 'cand-01') || candidates[0] || { name: activeName, id: 'cand-01' };
-  const myInterviews = interviews.filter(i =>
-    i.candidateId === candidate.id ||
-    (candidate.name && i.candidateName?.toLowerCase().includes(candidate.name.toLowerCase())) ||
-    i.candidateName?.toLowerCase().includes('aanya') ||
-    i.candidateName?.toLowerCase().includes('soren')
-  );
+  // Logged in candidate resolution
+  const candidate = candidates.find(c =>
+    (user?.id && c.id === user.id) ||
+    (user?.email && c.email?.toLowerCase() === user.email.toLowerCase()) ||
+    (user?.name && c.name?.toLowerCase() === user.name.toLowerCase())
+  ) || {
+    id: user?.id || 'cand-user',
+    name: user?.name || 'Candidate',
+    email: user?.email || '',
+    appliedRole: user?.roleTitle?.replace('Candidate — ', '') || 'Software Development Engineer',
+    skills: ['JavaScript', 'React'],
+    score: 85
+  };
+
+  const isDemoCandidate = !user || user.email === 'aanya.shah@webster.edu' || user.id === 'cand-01' || user.name === 'Aanya Shah';
+
+  const myInterviews = interviews.filter(i => {
+    if (isDemoCandidate) {
+      return i.candidateId === 'cand-01' || (i.candidateName || '').toLowerCase().includes('aanya');
+    }
+    const idMatch = user?.id && i.candidateId === user.id;
+    const nameMatch = user?.name && (i.candidateName || '').toLowerCase() === user.name.toLowerCase();
+    const emailMatch = user?.email && (i.candidateEmail || '').toLowerCase() === user.email.toLowerCase();
+    return idMatch || nameMatch || emailMatch;
+  });
 
   const sortedInterviews = [...myInterviews].sort((a, b) => {
     const da = `${a.date || ''} ${a.startTime || ''}`;
@@ -50,21 +66,10 @@ export default function CandidateDashboard() {
     return da.localeCompare(db);
   });
 
-  const nextInterview = sortedInterviews[0] || {
-    id: 'intv-201',
-    roundTitle: 'System Architecture & Fault Tolerance',
-    date: '2026-10-22',
-    startTime: '10:00',
-    endTime: '11:00',
-    duration: '60 min',
-    interviewerNames: ['Dr. Evelyn Voss', 'Devon Thorne'],
-    roomName: 'Virtual Cloud Chamber 1 (CodeCollab)',
-    meetingUrl: 'https://meet.arclight.io/apex-interview-201',
-    status: 'Scheduled'
-  };
+  const nextInterview = sortedInterviews.length > 0 ? sortedInterviews[0] : null;
 
   const stages = [
-    { name: '1. Coding Challenge', status: 'Completed', score: 94 },
+    { name: '1. Coding Challenge', status: myInterviews.length > 0 ? 'Completed' : 'Ready to Start', score: myInterviews.length > 0 ? 94 : 'Pending' },
     {
       name: '2. System Architecture',
       status: myInterviews.length > 0 ? 'Active (Scheduled)' : 'Pending Booking',
@@ -95,67 +100,95 @@ export default function CandidateDashboard() {
         }
       />
 
-      {/* Hero: Next Interview Card */}
-      <div className="rounded-2xl bg-gradient-to-br from-indigo-900 via-slate-900 to-navy-950 text-white p-6 md:p-8 shadow-xl relative overflow-hidden">
-        {/* Glow accent */}
-        <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+      {/* Hero: Next Interview Card or Self-Booking Prompt */}
+      {nextInterview ? (
+        <div className="rounded-2xl bg-gradient-to-br from-indigo-900 via-slate-900 to-navy-950 text-white p-6 md:p-8 shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-3 max-w-xl">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-500/30 text-indigo-200 text-xs font-mono border border-indigo-400/30">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-300" />
-              <span>Confirmed Interview Session</span>
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-3 max-w-xl">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-500/30 text-indigo-200 text-xs font-mono border border-indigo-400/30">
+                <Sparkles className="w-3.5 h-3.5 text-indigo-300" />
+                <span>Confirmed Interview Session</span>
+              </div>
+
+              <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-snug">
+                {nextInterview.roundTitle}
+              </h3>
+
+              <div className="flex flex-wrap gap-4 text-xs text-indigo-200">
+                <span className="flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-indigo-400" />
+                  {nextInterview.date}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-indigo-400" />
+                  {nextInterview.startTime} - {nextInterview.endTime} ({nextInterview.duration})
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Video className="w-4 h-4 text-indigo-400" />
+                  {nextInterview.roomName}
+                </span>
+              </div>
+
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Panel Evaluators: <strong>{nextInterview.interviewerNames?.join(', ')}</strong>. Please test your camera and microphone in the virtual sandbox 5 minutes beforehand.
+              </p>
             </div>
 
-            <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-snug">
-              {nextInterview.roundTitle}
-            </h3>
+            <div className="flex flex-col gap-2 shrink-0">
+              <a
+                href={nextInterview.meetingUrl || 'https://meet.arclight.io/apex-interview-201'}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-indigo-500 hover:bg-indigo-400 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-500/30 transition-all hover:scale-[1.02]"
+              >
+                <Video className="w-4 h-4" />
+                <span>Join Live Interview Meeting</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
 
-            <div className="flex flex-wrap gap-4 text-xs text-indigo-200">
-              <span className="flex items-center gap-1.5">
-                <Calendar className="w-4 h-4 text-indigo-400" />
-                {nextInterview.date}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Clock className="w-4 h-4 text-indigo-400" />
-                {nextInterview.startTime} - {nextInterview.endTime} ({nextInterview.duration})
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Video className="w-4 h-4 text-indigo-400" />
-                {nextInterview.roomName}
-              </span>
+              <div className="bg-slate-900/60 p-2 rounded-xl border border-indigo-400/20 backdrop-blur-xs flex justify-center">
+                <CalendarExportButtons interview={nextInterview} />
+              </div>
+
+              <Link
+                to="/candidate/calendar"
+                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-xl transition-colors text-center"
+              >
+                <span>View On My Calendar</span>
+              </Link>
             </div>
-
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Panel Evaluators: <strong>{nextInterview.interviewerNames?.join(', ')}</strong>. Please test your camera and microphone in the virtual sandbox 5 minutes beforehand.
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-2 shrink-0">
-            <a
-              href={nextInterview.meetingUrl || 'https://meet.arclight.io/apex-interview-201'}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-indigo-500 hover:bg-indigo-400 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-500/30 transition-all hover:scale-[1.02]"
-            >
-              <Video className="w-4 h-4" />
-              <span>Join Live Interview Meeting</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-
-            <div className="bg-slate-900/60 p-2 rounded-xl border border-indigo-400/20 backdrop-blur-xs flex justify-center">
-              <CalendarExportButtons interview={nextInterview} />
-            </div>
-
-            <Link
-              to="/candidate/calendar"
-              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-xl transition-colors text-center"
-            >
-              <span>View On My Calendar</span>
-            </Link>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="rounded-2xl bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950 text-white p-6 md:p-8 shadow-xl relative overflow-hidden border border-indigo-500/20">
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-3 max-w-xl">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-mono border border-emerald-400/30">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
+                <span>Application Active & Ready for Scheduling</span>
+              </div>
+              <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-snug">
+                Welcome to your placement portal, {candidate.name}!
+              </h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                You do not have any confirmed interview sessions yet. Choose an open slot in the self-booking portal to lock in your interview time with our faculty panel.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 shrink-0">
+              <Link
+                to="/candidate/book/round-101"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-indigo-500 hover:bg-indigo-400 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-500/30 transition-all hover:scale-[1.02]"
+              >
+                <CalendarCheck className="w-4 h-4" />
+                <span>Self-Book Interview Slot</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Recruitment Progress Tracker */}
       <div className="bg-white rounded-2xl border border-slate-200/90 shadow-subtle p-6">

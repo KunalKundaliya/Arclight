@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { apiClient } from '../services/apiClient';
+import { storageService } from '../services/storageService';
 
 const AuthContext = createContext(null);
 
@@ -88,15 +89,54 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (email, password) => {
-    const res = await apiClient.login({ email, password });
-    if (res.success && res.token) {
-      localStorage.setItem('arclight_token', res.token);
-      setUser(res.user);
-      setCurrentRole(res.user.role);
-      localStorage.setItem('arclight_persona', res.user.role);
-      return res.user;
+    try {
+      const res = await apiClient.login({ email, password });
+      if (res.success && res.token) {
+        localStorage.setItem('arclight_token', res.token);
+        setUser(res.user);
+        setCurrentRole(res.user.role);
+        localStorage.setItem('arclight_persona', res.user.role);
+        return res.user;
+      }
+      throw new Error(res.message || 'Login failed');
+    } catch (err) {
+      // Local fallback for offline/demo persona emails
+      const targetRole = Object.keys(DEMO_PERSONAS).find(
+        r => DEMO_PERSONAS[r].email.toLowerCase() === (email || '').toLowerCase()
+      );
+      if (targetRole) {
+        const persona = DEMO_PERSONAS[targetRole];
+        setUser(persona);
+        setCurrentRole(persona.role);
+        localStorage.setItem('arclight_persona', persona.role);
+        return persona;
+      }
+      throw err;
     }
-    throw new Error(res.message || 'Login failed');
+  };
+
+  const register = async (userData) => {
+    try {
+      const res = await apiClient.register(userData);
+      if (res.success && res.token) {
+        localStorage.setItem('arclight_token', res.token);
+        setUser(res.user);
+        setCurrentRole(res.user.role);
+        localStorage.setItem('arclight_persona', res.user.role);
+        // Also cascade into local storage cache
+        storageService.registerLocalUser(userData);
+        return res.user;
+      }
+      throw new Error(res.message || 'Registration failed');
+    } catch (err) {
+      console.warn('Backend registration failed, applying local fallback:', err.message);
+      // Fallback local registration
+      const localUser = storageService.registerLocalUser(userData);
+      setUser(localUser);
+      setCurrentRole(localUser.role);
+      localStorage.setItem('arclight_persona', localUser.role);
+      return localUser;
+    }
   };
 
   const logout = () => {
@@ -107,7 +147,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, currentRole, isAuthenticated: !!user, loading, login, logout, switchRole }}>
+    <AuthContext.Provider value={{ user, currentRole, isAuthenticated: !!user, loading, login, register, logout, switchRole }}>
       {children}
     </AuthContext.Provider>
   );

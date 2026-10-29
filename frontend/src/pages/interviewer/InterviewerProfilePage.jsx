@@ -2,10 +2,26 @@ import React from 'react';
 import { User, Mail, Award, Star, Clock, CheckCircle2, ShieldCheck, Briefcase } from 'lucide-react';
 import PageHeader from '../../components/common/PageHeader';
 import { storageService } from '../../services/storageService';
+import { useAuth } from '../../context/AuthContext';
 
 export default function InterviewerProfilePage() {
+  const { user } = useAuth();
   const interviewers = storageService.getInterviewers();
-  const profile = interviewers.find(i => i.id === 'int-01') || interviewers[0];
+  const profile = interviewers.find(i =>
+    (user?.id && i.id === user.id) ||
+    (user?.email && i.email?.toLowerCase() === user.email.toLowerCase()) ||
+    (user?.name && i.name?.toLowerCase() === user.name.toLowerCase())
+  ) || {
+    name: user?.name || 'Evaluator',
+    email: user?.email || '',
+    title: user?.roleTitle || 'Technical Panel Evaluator',
+    department: user?.department || 'Engineering',
+    rating: 5.0,
+    skills: ['System Design', 'Algorithms', 'Distributed Systems'],
+    maxInterviewsPerDay: 3,
+    assignedInterviews: 0,
+    initials: user?.avatar || 'IN'
+  };
 
   return (
     <div className="space-y-6">

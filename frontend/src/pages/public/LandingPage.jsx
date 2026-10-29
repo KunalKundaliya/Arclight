@@ -48,10 +48,10 @@ export default function LandingPage() {
           {/* Primary & Secondary CTAs */}
           <div className="flex flex-wrap items-center gap-3.5 pt-2">
             <Link
-              to="/coordinator"
+              to="/signup"
               className="inline-flex items-center gap-2 px-6 py-3.5 text-sm font-semibold text-white bg-[#6366f1] hover:bg-[#4f46e5] rounded-xl shadow-md shadow-indigo-600/20 transition-all hover:translate-y-[-1px]"
             >
-              <span>Explore the workspace</span>
+              <span>Get started free</span>
               <span>→</span>
             </Link>
             <Link
@@ -499,10 +499,10 @@ export default function LandingPage() {
         </p>
         <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
           <Link
-            to="/coordinator"
+            to="/signup"
             className="inline-flex items-center gap-2 px-6 py-3.5 text-sm font-semibold text-white bg-[#6366f1] hover:bg-[#4f46e5] rounded-xl shadow-md shadow-indigo-600/30 transition-all hover:translate-y-[-1px]"
           >
-            <span>Explore the workspace</span>
+            <span>Create your account</span>
             <span>→</span>
           </Link>
           <Link

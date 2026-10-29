@@ -5,10 +5,12 @@ import StatusBadge from '../../components/common/StatusBadge';
 import { storageService } from '../../services/storageService';
 import { apiClient } from '../../services/apiClient';
 import { useRealtime } from '../../context/RealtimeContext';
+import { useAuth } from '../../context/AuthContext';
 import CalendarExportButtons from '../../components/common/CalendarExportButtons';
 import { normalizeDate } from '../coordinator/MasterCalendarPage';
 
 export default function CandidateCalendarPage() {
+  const { user } = useAuth();
   const [interviews, setInterviews] = useState(() => storageService.getInterviews());
   const [isLoading, setIsLoading] = useState(false);
   const { lastUpdated } = useRealtime();
@@ -33,9 +35,17 @@ export default function CandidateCalendarPage() {
     fetchLiveInterviews();
   }, [lastUpdated, fetchLiveInterviews]);
 
-  const myInterviews = interviews.filter(i =>
-    i.candidateId === 'cand-01' || (i.candidateName || '').toLowerCase().includes('soren')
-  );
+  const isDemoCandidate = !user || user.email === 'aanya.shah@webster.edu' || user.id === 'cand-01' || user.name === 'Aanya Shah';
+
+  const myInterviews = interviews.filter(i => {
+    if (isDemoCandidate) {
+      return i.candidateId === 'cand-01' || (i.candidateName || '').toLowerCase().includes('aanya') || (i.candidateName || '').toLowerCase().includes('soren');
+    }
+    const idMatch = user?.id && i.candidateId === user.id;
+    const nameMatch = user?.name && (i.candidateName || '').toLowerCase() === user.name.toLowerCase();
+    const emailMatch = user?.email && (i.candidateEmail || '').toLowerCase() === user.email.toLowerCase();
+    return idMatch || nameMatch || emailMatch;
+  });
 
   return (
     <div className="space-y-6">

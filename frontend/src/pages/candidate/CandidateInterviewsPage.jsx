@@ -1,21 +1,32 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, Clock, Video, User, CheckCircle2, ExternalLink, ArrowRight } from 'lucide-react';
+import { Calendar, Clock, Video, User, CheckCircle2, ExternalLink, ArrowRight, CalendarCheck } from 'lucide-react';
 import PageHeader from '../../components/common/PageHeader';
 import StatusBadge from '../../components/common/StatusBadge';
 import { storageService } from '../../services/storageService';
+import { useAuth } from '../../context/AuthContext';
 
 export default function CandidateInterviewsPage() {
+  const { user } = useAuth();
   const [interviews] = useState(() => storageService.getInterviews());
-  const myInterviews = interviews.filter(i =>
-    i.candidateId === 'cand-01' || i.candidateName.toLowerCase().includes('soren')
-  );
+
+  const isDemoCandidate = !user || user.email === 'aanya.shah@webster.edu' || user.id === 'cand-01' || user.name === 'Aanya Shah';
+
+  const myInterviews = interviews.filter(i => {
+    if (isDemoCandidate) {
+      return i.candidateId === 'cand-01' || (i.candidateName || '').toLowerCase().includes('aanya') || (i.candidateName || '').toLowerCase().includes('soren');
+    }
+    const idMatch = user?.id && i.candidateId === user.id;
+    const nameMatch = user?.name && (i.candidateName || '').toLowerCase() === user.name.toLowerCase();
+    const emailMatch = user?.email && (i.candidateEmail || '').toLowerCase() === user.email.toLowerCase();
+    return idMatch || nameMatch || emailMatch;
+  });
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="My Interviews"
-        subtitle="Historical and upcoming interview rounds for the Fall 2026 Apex Placement Drive"
+        subtitle="Historical and upcoming interview rounds for the Fall 2026 Webster Placement Drive"
         breadcrumbs={[
           { label: 'Candidate', to: '/candidate' },
           { label: 'Interviews' }
@@ -35,7 +46,7 @@ export default function CandidateInterviewsPage() {
               </div>
               <h4 className="text-sm font-bold text-slate-900">{session.roundTitle}</h4>
               <div className="text-slate-500 font-mono text-[11px] mt-0.5">
-                Evaluators: {session.interviewerNames.join(', ')}
+                Evaluators: {Array.isArray(session.interviewerNames) ? session.interviewerNames.join(', ') : session.interviewerNames}
               </div>
             </div>
 
@@ -64,6 +75,24 @@ export default function CandidateInterviewsPage() {
             </div>
           </div>
         ))}
+
+        {myInterviews.length === 0 && (
+          <div className="p-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200 text-xs text-slate-500 space-y-2">
+            <p className="font-semibold text-slate-700">No interview sessions found</p>
+            <p className="text-slate-400 max-w-sm mx-auto">
+              You haven't scheduled any interviews yet. You can self-book a verified slot right now.
+            </p>
+            <div className="pt-2">
+              <Link
+                to="/candidate/book/round-101"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors"
+              >
+                <CalendarCheck className="w-3.5 h-3.5" />
+                <span>Book a Slot Now</span>
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
